@@ -1,0 +1,100 @@
+import uuid
+from typing import Optional
+from fastapi import APIRouter, Depends, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.database import get_db
+from app.core.pagination import PaginatedResponse
+from app.modules.members.schemas import MemberCreate, MemberUpdate, MemberResponse
+from app.modules.members.service import MemberService
+from app.modules.users.router import require_roles
+from app.modules.users.models import User, UserRole
+
+router = APIRouter(prefix="/members", tags=["Members"])
+
+
+def _to_response(m) -> MemberResponse:
+    return MemberResponse(
+        id=m.id,
+        member_number=m.member_number,
+        full_name=m.full_name,
+        national_id=m.national_id,
+        phone=m.phone,
+        email=m.email,
+        gender=m.gender,
+        date_of_birth=m.date_of_birth,
+        address=m.address,
+        group_id=m.group_id,
+        group_name=m.group.name if m.group else None,
+        membership_status=m.membership_status,
+        join_date=m.join_date,
+        created_at=m.created_at,
+        updated_at=m.updated_at
+    )
+
+
+@router.get("", response_model=PaginatedResponse[MemberResponse])
+async def list_members(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    search: Optional[str] = Query(None),
+    group_id: Optional[uuid.UUID] = Query(None),
+    status: Optional[str] = Query(None),
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF, UserRole.VIEWER)),
+    db: AsyncSession = Depends(get_db)
+):
+    service = MemberService(db)
+    skip = (page - 1) * page_size
+    items, total = await service.list_members(
+        skip=skip,
+        limit=page_size,
+        search=search,
+        group_id=group_id,
+        status=status
+    )
+    total_pages = (total + page_size - 1) // page_size if total > 0 else 1
+
+    return PaginatedResponse(
+        items=[_to_response(m) for m in items],
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages
+    )
+
+
+@router.post("", response_model=MemberResponse, status_code=status.HTTP_201_CREATED)
+async def create_member(
+    member_in: MemberCreate,
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF)),
+    db: AsyncSession = Depends(get_db)
+):
+    service = MemberService(db)
+    member = await service.create(member_in)
+    return _to_response(member)
+
+
+@router.get("/{member_id}", response_model=MemberResponse)
+async def get_member(
+    member_id: uuid.UUID,
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF, UserRole.VIEWER)),
+    db: AsyncSession = Depends(get_db)
+):
+    service = MemberService(db)
+    member = await service.get_by_id(member_id)
+    if not member:
+        from app.core.exceptions import NotFoundException
+        raise NotFoundException("Member", member_id)
+    return _to_response(member)
+
+
+@router.put("/{member_id}", response_model=MemberResponse)
+async def update_member(
+    member_id: uuid.UUID,
+    member_in: MemberUpdate,
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF)),
+    db: AsyncSession = Depends(get_db)
+):
+    service = MemberService(db)
+    member = await service.update(member_id, member_in)
+    return _to_response(member)

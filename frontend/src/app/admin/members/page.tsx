@@ -205,13 +205,13 @@ export default function AdminMembersPage() {
                   ) : (
                     members.map((m) => (
                       <tr key={m.id} className="hover:bg-slate-50/50">
-                        <td className="p-3 pl-6 font-mono font-medium text-slate-900">
+                        <td className="p-3 pl-6 font-medium text-slate-900">
                           {m.member_number}
                         </td>
                         <td className="p-3 font-semibold text-slate-900">
                           {m.full_name}
                         </td>
-                        <td className="p-3 font-mono text-[11px] text-slate-600">
+                        <td className="p-3 text-[11px] text-slate-600">
                           {m.phone}
                         </td>
                         <td className="p-3 text-slate-600">
@@ -221,7 +221,7 @@ export default function AdminMembersPage() {
                             <span className="text-slate-400 italic">Unassigned</span>
                           )}
                         </td>
-                        <td className="p-3 text-[11px] font-mono text-slate-500">
+                        <td className="p-3 text-[11px] text-slate-500">
                           {m.national_id || '—'}
                         </td>
                         <td className="p-3">

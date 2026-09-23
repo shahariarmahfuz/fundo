@@ -171,7 +171,7 @@ export default function AdminDonationsPage() {
                   ) : (
                     donations.map((d) => (
                       <tr key={d.id} className="hover:bg-slate-50/50">
-                        <td className="p-3 pl-6 font-mono font-medium text-slate-900">
+                        <td className="p-3 pl-6 font-medium text-slate-900">
                           {d.receipt_number}
                         </td>
                         <td className="p-3 font-semibold text-slate-900">
@@ -182,7 +182,7 @@ export default function AdminDonationsPage() {
                           )}
                         </td>
                         <td className="p-3">
-                          <Badge variant="info" className="text-[10px] uppercase font-mono">
+                          <Badge variant="info" className="text-[10px] uppercase">
                             {d.donation_category}
                           </Badge>
                         </td>
@@ -192,7 +192,7 @@ export default function AdminDonationsPage() {
                         <td className="p-3 capitalize text-slate-500">
                           {d.payment_method.replace('_', ' ')}
                         </td>
-                        <td className="p-3 font-mono font-bold text-teal-800">
+                        <td className="p-3 font-bold text-teal-800">
                           +{formatCurrency(d.amount)}
                         </td>
                         <td className="p-3 pr-6 text-right text-slate-500">

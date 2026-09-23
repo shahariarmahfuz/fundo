@@ -66,7 +66,7 @@ export default function AdminReportsPage() {
           <Card className="min-w-0 w-full">
             <CardContent className="p-4 sm:p-5 space-y-1 min-w-0">
               <span className="text-xs font-medium text-slate-500">Total Capital Assets</span>
-              <div className="text-2xl font-bold text-teal-800 font-mono">
+              <div className="text-2xl font-bold text-teal-800">
                 {report ? formatCurrency(report.total_assets) : '$472,800.00'}
               </div>
               <div className="text-[11px] text-slate-400">Cash & loan receivables</div>
@@ -76,7 +76,7 @@ export default function AdminReportsPage() {
           <Card>
             <CardContent className="p-5 space-y-1">
               <span className="text-xs font-medium text-slate-500">Member Savings Liability</span>
-              <div className="text-2xl font-bold text-slate-900 font-mono">
+              <div className="text-2xl font-bold text-slate-900">
                 {report ? formatCurrency(report.total_member_savings) : '$800.00'}
               </div>
               <div className="text-[11px] text-slate-400">Member redeemable equity</div>
@@ -86,7 +86,7 @@ export default function AdminReportsPage() {
           <Card>
             <CardContent className="p-5 space-y-1">
               <span className="text-xs font-medium text-slate-500">Loan Receivables Asset</span>
-              <div className="text-2xl font-bold text-slate-900 font-mono">
+              <div className="text-2xl font-bold text-slate-900">
                 {report ? formatCurrency(report.total_loan_receivables) : '$3,100.00'}
               </div>
               <div className="text-[11px] text-slate-400">Active revolving loans due</div>
@@ -96,7 +96,7 @@ export default function AdminReportsPage() {
           <Card>
             <CardContent className="p-5 space-y-1">
               <span className="text-xs font-medium text-slate-500">Charitable Inflows (YTD)</span>
-              <div className="text-2xl font-bold text-emerald-700 font-mono">
+              <div className="text-2xl font-bold text-emerald-700">
                 {report ? formatCurrency(report.total_donations) : '$100,000.00'}
               </div>
               <div className="text-[11px] text-slate-400">Sadaqa, Zakat & endowments</div>
@@ -132,16 +132,16 @@ export default function AdminReportsPage() {
                         <td className="p-3 pl-6 font-semibold text-slate-900">
                           {row.month} 2026
                         </td>
-                        <td className="p-3 font-mono font-medium text-emerald-700">
+                        <td className="p-3 font-medium text-emerald-700">
                           +{formatCurrency(row.donations)}
                         </td>
-                        <td className="p-3 font-mono font-medium text-teal-800">
+                        <td className="p-3 font-medium text-teal-800">
                           +{formatCurrency(row.contributions)}
                         </td>
-                        <td className="p-3 font-mono font-medium text-amber-700">
+                        <td className="p-3 font-medium text-amber-700">
                           -{formatCurrency(row.disbursements)}
                         </td>
-                        <td className="p-3 pr-6 text-right font-mono font-bold text-slate-900">
+                        <td className="p-3 pr-6 text-right font-bold text-slate-900">
                           {formatCurrency(net)}
                         </td>
                       </tr>

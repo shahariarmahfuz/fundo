@@ -208,22 +208,22 @@ export default function AdminLoansPage() {
                   ) : (
                     loans.map((l) => (
                       <tr key={l.id} className="hover:bg-slate-50/50">
-                        <td className="p-3 pl-6 font-mono font-medium text-slate-900">
+                        <td className="p-3 pl-6 font-medium text-slate-900">
                           {l.loan_number}
                         </td>
                         <td className="p-3 font-semibold text-slate-900">
-                          {l.member_name} <span className="text-[11px] font-mono text-slate-400">({l.member_number})</span>
+                          {l.member_name} <span className="text-[11px] text-slate-400">({l.member_number})</span>
                         </td>
-                        <td className="p-3 font-mono font-bold text-slate-900">
+                        <td className="p-3 font-bold text-slate-900">
                           {formatCurrency(l.principal_amount)}
                         </td>
-                        <td className="p-3 font-mono text-slate-600">
+                        <td className="p-3 text-slate-600">
                           {formatCurrency(l.monthly_installment)} / mo
                         </td>
-                        <td className="p-3 font-mono text-emerald-700 font-semibold">
+                        <td className="p-3 text-emerald-700 font-semibold">
                           {formatCurrency(l.total_repaid)}
                         </td>
-                        <td className="p-3 font-mono text-amber-700 font-bold">
+                        <td className="p-3 text-amber-700 font-bold">
                           {formatCurrency(l.outstanding_balance)}
                         </td>
                         <td className="p-3">
@@ -375,7 +375,7 @@ export default function AdminLoansPage() {
             <div className="p-3 bg-slate-50 rounded-md border border-slate-200 text-xs space-y-1">
               <div className="flex justify-between">
                 <span className="text-slate-500">Loan Number:</span>
-                <span className="font-mono font-bold text-slate-800">{selectedLoan.loan_number}</span>
+                <span className="font-bold text-slate-800">{selectedLoan.loan_number}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Borrower:</span>
@@ -383,7 +383,7 @@ export default function AdminLoansPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Remaining Balance:</span>
-                <span className="font-mono font-bold text-amber-700">{formatCurrency(selectedLoan.outstanding_balance)}</span>
+                <span className="font-bold text-amber-700">{formatCurrency(selectedLoan.outstanding_balance)}</span>
               </div>
             </div>
 

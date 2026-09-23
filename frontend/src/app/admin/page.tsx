@@ -150,7 +150,7 @@ export default async function AdminDashboardPage() {
               <Card key={fund.code} className="p-4 flex flex-col justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-mono text-[10px] text-slate-400 font-semibold">{fund.code}</span>
+                    <span className="text-[10px] text-slate-400 font-semibold">{fund.code}</span>
                     <Badge variant="outline" className="text-[10px]">{fund.fund_type}</Badge>
                   </div>
                   <div className="text-xs font-semibold text-slate-800 line-clamp-1">{fund.name}</div>

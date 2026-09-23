@@ -159,7 +159,7 @@ export default function AdminGroupsPage() {
                   ) : (
                     groups.map((g) => (
                       <tr key={g.id} className="hover:bg-slate-50/50">
-                        <td className="p-3 pl-6 font-mono font-medium text-slate-900">
+                        <td className="p-3 pl-6 font-medium text-slate-900">
                           {g.code}
                         </td>
                         <td className="p-3 font-semibold text-slate-900">
@@ -171,7 +171,7 @@ export default function AdminGroupsPage() {
                         <td className="p-3 capitalize text-slate-600">
                           {g.meeting_frequency}
                         </td>
-                        <td className="p-3 font-mono text-slate-900 font-semibold">
+                        <td className="p-3 text-slate-900 font-semibold">
                           {g.member_count || 0} members
                         </td>
                         <td className="p-3">

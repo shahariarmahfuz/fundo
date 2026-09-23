@@ -84,11 +84,11 @@ export default function AdminLedgersPage() {
           <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-xs">
             <div>
               <span className="text-slate-400">Total Debits: </span>
-              <span className="font-mono font-bold text-slate-900">{formatCurrency(totalDebits)}</span>
+              <span className="font-bold text-slate-900">{formatCurrency(totalDebits)}</span>
             </div>
             <div>
               <span className="text-slate-400">Total Credits: </span>
-              <span className="font-mono font-bold text-slate-900">{formatCurrency(totalCredits)}</span>
+              <span className="font-bold text-slate-900">{formatCurrency(totalCredits)}</span>
             </div>
           </div>
         </div>
@@ -125,30 +125,30 @@ export default function AdminLedgersPage() {
                   ) : (
                     ledgers.map((l) => (
                       <tr key={l.id} className="hover:bg-slate-50/50">
-                        <td className="p-3 pl-6 font-mono font-medium text-slate-900">
+                        <td className="p-3 pl-6 font-medium text-slate-900">
                           {l.entry_number}
                         </td>
-                        <td className="p-3 font-mono text-[11px] text-teal-800 font-semibold">
+                        <td className="p-3 text-[11px] text-teal-800 font-semibold">
                           {l.account_code}
                         </td>
                         <td className="p-3 font-semibold text-slate-900">
                           {l.account_name}
                         </td>
                         <td className="p-3">
-                          <Badge variant="outline" className="text-[10px] uppercase font-mono">
+                          <Badge variant="outline" className="text-[10px] uppercase">
                             {l.account_type}
                           </Badge>
                         </td>
                         <td className="p-3 text-slate-600 max-w-xs truncate">
                           {l.description}
                         </td>
-                        <td className="p-3 text-right font-mono font-medium text-slate-900">
+                        <td className="p-3 text-right font-medium text-slate-900">
                           {Number(l.debit) > 0 ? formatCurrency(l.debit) : '—'}
                         </td>
-                        <td className="p-3 text-right font-mono font-medium text-slate-900">
+                        <td className="p-3 text-right font-medium text-slate-900">
                           {Number(l.credit) > 0 ? formatCurrency(l.credit) : '—'}
                         </td>
-                        <td className="p-3 pr-6 text-right text-slate-500 font-mono text-[11px]">
+                        <td className="p-3 pr-6 text-right text-slate-500 text-[11px]">
                           {formatDate(l.entry_date)}
                         </td>
                       </tr>

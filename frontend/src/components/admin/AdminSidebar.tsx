@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -19,6 +20,7 @@ import {
   Globe,
   LogOut,
   ChevronRight,
+  ChevronDown,
   X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -32,9 +34,24 @@ interface NavItem {
   permission?: string;
 }
 
-const allNavItems: NavItem[] = [
+interface SubmenuItem {
+  href: string;
+  label: string;
+  permission?: string;
+  exact?: boolean;
+}
+
+const memberSubmenuItems: SubmenuItem[] = [
+  { href: '/admin/members/add', label: 'Add Member', permission: 'members.create' },
+  { href: '/admin/members', label: 'Manage Member', permission: 'members.view', exact: true },
+  { href: '/admin/members/due-list', label: 'Member Due List', permission: 'members.view' },
+  { href: '/admin/members/ledger', label: 'Member Ledger', permission: 'members.view' },
+  { href: '/admin/members/applications', label: 'Member Application (View Only)', permission: 'members.view' },
+];
+
+const standardNavItems: NavItem[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/members', label: 'Members', icon: Users, permission: 'members.view' },
+  // 'Member' expandable menu is rendered between Dashboard and Beneficiaries
   { href: '/admin/beneficiaries', label: 'Beneficiaries', icon: HeartHandshake, permission: 'beneficiaries.view' },
   { href: '/admin/groups', label: 'Groups', icon: Network, permission: 'groups.view' },
   { href: '/admin/contributions', label: 'Contributions', icon: PiggyBank, permission: 'contributions.view' },
@@ -53,19 +70,29 @@ export function AdminSidebar() {
   const { isOpen, closeSidebar } = useAdminNav();
   const { user, hasPermission, isSuperAdmin, logout } = useAuth();
 
+  const isMemberRoute = pathname.startsWith('/admin/members');
+  // Default state on initial load: closed by default unless current active route is already within this section
+  const [isMemberExpanded, setIsMemberExpanded] = useState<boolean>(() => isMemberRoute);
+
+  useEffect(() => {
+    if (pathname.startsWith('/admin/members')) {
+      setIsMemberExpanded(true);
+    }
+  }, [pathname]);
+
   if (pathname === '/login' || pathname === '/admin/login') {
     return null;
   }
 
-  // Filter navigation items by granular permission
-  const visibleNavItems = allNavItems.filter((item) => {
-    if (!item.permission) return true;
-    return isSuperAdmin || hasPermission(item.permission);
-  });
+  const canViewMembers = isSuperAdmin || hasPermission('members.view');
 
   const handleLogout = async () => {
     closeSidebar();
     await logout();
+  };
+
+  const toggleMemberMenu = () => {
+    setIsMemberExpanded((prev) => !prev);
   };
 
   return (
@@ -119,9 +146,94 @@ export function AdminSidebar() {
           <div className="px-3 pb-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
             Foundation Modules
           </div>
-          {visibleNavItems.map((item) => {
+
+          {/* 1. Dashboard Link */}
+          {(() => {
+            const isDashboardActive = pathname === '/admin';
+            return (
+              <Link
+                href="/admin"
+                onClick={closeSidebar}
+                className={cn(
+                  "flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md transition-colors",
+                  isDashboardActive
+                    ? "bg-teal-50 text-teal-800 font-semibold"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  <LayoutDashboard className={cn("h-4 w-4", isDashboardActive ? "text-teal-700" : "text-slate-400")} />
+                  <span>Dashboard</span>
+                </div>
+                {isDashboardActive && <ChevronRight className="h-3 w-3 text-teal-700" />}
+              </Link>
+            );
+          })()}
+
+          {/* 2. Expandable Member Parent Menu */}
+          {canViewMembers && (
+            <div className="space-y-1">
+              <button
+                type="button"
+                onClick={toggleMemberMenu}
+                className={cn(
+                  "w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md transition-colors text-left",
+                  isMemberRoute
+                    ? "bg-teal-50/70 text-teal-900 font-semibold"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                )}
+                aria-expanded={isMemberExpanded}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Users className={cn("h-4 w-4", isMemberRoute ? "text-teal-700" : "text-slate-400")} />
+                  <span>Member</span>
+                </div>
+                {isMemberExpanded ? (
+                  <ChevronDown className="h-3.5 w-3.5 text-teal-700 transition-transform duration-200" />
+                ) : (
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400 transition-transform duration-200" />
+                )}
+              </button>
+
+              {/* Collapsible Submenu */}
+              {isMemberExpanded && (
+                <div className="ml-4 pl-3 border-l border-slate-200 space-y-0.5 py-1">
+                  {memberSubmenuItems.map((subItem) => {
+                    if (subItem.permission && !isSuperAdmin && !hasPermission(subItem.permission)) {
+                      return null;
+                    }
+                    const isSubActive = subItem.exact
+                      ? pathname === subItem.href
+                      : pathname === subItem.href || (subItem.href !== '/admin/members' && pathname.startsWith(subItem.href));
+                    return (
+                      <Link
+                        key={subItem.href}
+                        href={subItem.href}
+                        onClick={closeSidebar}
+                        className={cn(
+                          "flex items-center justify-between px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-colors",
+                          isSubActive
+                            ? "bg-teal-50 text-teal-800 font-semibold"
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                        )}
+                      >
+                        <span className="truncate">{subItem.label}</span>
+                        {isSubActive && <div className="h-1.5 w-1.5 rounded-full bg-teal-700 shrink-0" />}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 3. Remaining Foundation Modules */}
+          {standardNavItems.slice(1).map((item) => {
+            if (item.permission && !isSuperAdmin && !hasPermission(item.permission)) {
+              return null;
+            }
             const Icon = item.icon;
-            const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
+            const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href + '/'));
             return (
               <Link
                 key={item.href}

@@ -150,21 +150,21 @@ export default function AdminFundsPage() {
                   ) : (
                     funds.map((f) => (
                       <tr key={f.id} className="hover:bg-slate-50/50">
-                        <td className="p-3 pl-6 font-mono font-medium text-slate-900">
+                        <td className="p-3 pl-6 font-medium text-slate-900">
                           {f.code}
                         </td>
                         <td className="p-3 font-semibold text-slate-900">
                           {f.name}
                         </td>
                         <td className="p-3">
-                          <Badge variant="outline" className="text-[10px] uppercase font-mono">
+                          <Badge variant="outline" className="text-[10px] uppercase">
                             {f.fund_type}
                           </Badge>
                         </td>
-                        <td className="p-3 font-mono text-slate-500">
+                        <td className="p-3 text-slate-500">
                           {f.currency}
                         </td>
-                        <td className="p-3 font-mono font-bold text-teal-800 text-sm">
+                        <td className="p-3 font-bold text-teal-800 text-sm">
                           {formatCurrency(f.current_balance, f.currency)}
                         </td>
                         <td className="p-3">

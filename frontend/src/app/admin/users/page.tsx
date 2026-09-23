@@ -242,13 +242,13 @@ export default function AdminUsersPage() {
                           <td className="p-3 pl-6 font-semibold text-slate-900">
                             {u.full_name}
                           </td>
-                          <td className="p-3 font-mono text-slate-700">
+                          <td className="p-3 text-slate-700">
                             {u.email}
                           </td>
                           <td className="p-3">
                             <Badge
                               variant={u.is_superadmin ? 'info' : 'outline'}
-                              className="text-[10px] uppercase font-mono"
+                              className="text-[10px] uppercase"
                             >
                               {u.role.replace('_', ' ')}
                             </Badge>
@@ -257,7 +257,7 @@ export default function AdminUsersPage() {
                             {u.is_superadmin ? (
                               <span className="text-teal-700 font-semibold">ALL (Super Admin Bypass)</span>
                             ) : u.permissions && u.permissions.length > 0 ? (
-                              <span className="font-mono text-slate-600">
+                              <span className="text-slate-600">
                                 {u.permissions.length} permissions ({u.permissions.slice(0, 2).join(', ')}{u.permissions.length > 2 ? '...' : ''})
                               </span>
                             ) : (

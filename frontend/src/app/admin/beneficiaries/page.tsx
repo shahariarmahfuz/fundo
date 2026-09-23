@@ -199,7 +199,7 @@ export default function AdminBeneficiariesPage() {
                   ) : (
                     beneficiaries.map((b) => (
                       <tr key={b.id} className="hover:bg-slate-50/50">
-                        <td className="p-3 pl-6 font-mono font-medium text-slate-900">
+                        <td className="p-3 pl-6 font-medium text-slate-900">
                           {b.beneficiary_code}
                         </td>
                         <td className="p-3 font-semibold text-slate-900">
@@ -216,7 +216,7 @@ export default function AdminBeneficiariesPage() {
                         <td className="p-3 text-slate-500">
                           {b.location || '—'}
                         </td>
-                        <td className="p-3 font-mono font-bold text-teal-800">
+                        <td className="p-3 font-bold text-teal-800">
                           {formatCurrency(b.total_aid_received)}
                         </td>
                         <td className="p-3 pr-6 text-right">

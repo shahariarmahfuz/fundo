@@ -173,11 +173,11 @@ export default function AdminContributionsPage() {
                   ) : (
                     contributions.map((c) => (
                       <tr key={c.id} className="hover:bg-slate-50/50">
-                        <td className="p-3 pl-6 font-mono font-medium text-slate-900">
+                        <td className="p-3 pl-6 font-medium text-slate-900">
                           {c.receipt_number}
                         </td>
                         <td className="p-3 font-semibold text-slate-900">
-                          {c.member_name} <span className="font-mono font-normal text-slate-400 text-[11px]">({c.member_number})</span>
+                          {c.member_name} <span className="font-normal text-slate-400 text-[11px]">({c.member_number})</span>
                         </td>
                         <td className="p-3">
                           <Badge variant="outline" className="text-[10px] capitalize">
@@ -190,7 +190,7 @@ export default function AdminContributionsPage() {
                         <td className="p-3 capitalize text-slate-500">
                           {c.payment_method.replace('_', ' ')}
                         </td>
-                        <td className="p-3 font-mono font-bold text-teal-800">
+                        <td className="p-3 font-bold text-teal-800">
                           +{formatCurrency(c.amount)}
                         </td>
                         <td className="p-3 pr-6 text-right text-slate-500">

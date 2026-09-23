@@ -105,13 +105,13 @@ export default function AdminTransactionsPage() {
                   ) : (
                     transactions.map((t) => (
                       <tr key={t.id} className="hover:bg-slate-50/50">
-                        <td className="p-3 pl-6 font-mono font-medium text-slate-900">
+                        <td className="p-3 pl-6 font-medium text-slate-900">
                           {t.transaction_number}
                         </td>
                         <td className="p-3">
                           <Badge
                             variant={t.transaction_type === 'credit' ? 'success' : 'destructive'}
-                            className="text-[10px] uppercase font-mono"
+                            className="text-[10px] uppercase"
                           >
                             {t.transaction_type}
                           </Badge>
@@ -125,13 +125,13 @@ export default function AdminTransactionsPage() {
                         <td className="p-3 text-slate-600 max-w-sm truncate">
                           {t.description}
                         </td>
-                        <td className="p-3 text-right font-mono font-bold text-slate-900">
+                        <td className="p-3 text-right font-bold text-slate-900">
                           {t.transaction_type === 'credit' ? '+' : '-'}{formatCurrency(t.amount)}
                         </td>
-                        <td className="p-3 text-right font-mono font-semibold text-teal-800">
+                        <td className="p-3 text-right font-semibold text-teal-800">
                           {formatCurrency(t.balance_after)}
                         </td>
-                        <td className="p-3 pr-6 text-right text-slate-500 font-mono text-[11px]">
+                        <td className="p-3 pr-6 text-right text-slate-500 text-[11px]">
                           {formatDate(t.transaction_date)}
                         </td>
                       </tr>

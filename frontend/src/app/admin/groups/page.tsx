@@ -64,13 +64,13 @@ export default function AdminGroupsPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto">
+    <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Community Savings Circles & Groups"
         subtitle="Manage grassroots clusters, mutual accountability groups, and meeting cadences"
       />
 
-      <div className="p-8 space-y-6 max-w-7xl mx-auto w-full">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           <form onSubmit={(e) => { e.preventDefault(); loadData(); }} className="relative max-w-md w-full">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -98,10 +98,10 @@ export default function AdminGroupsPage() {
           </Button>
         </div>
 
-        <Card>
+        <Card className="min-w-0 w-full overflow-hidden">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto max-w-full">
+              <table className="w-full min-w-[650px] text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
                   <tr>
                     <th className="p-3 pl-6">Group Code</th>

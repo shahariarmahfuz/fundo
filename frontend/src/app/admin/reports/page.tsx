@@ -28,17 +28,17 @@ export default function AdminReportsPage() {
   }, []);
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto">
+    <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Financial Statements & Portfolio Reports"
         subtitle="Balance sheet reconciliation, monthly capital flow trends, and assets/liabilities position"
       />
 
-      <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto w-full min-w-0">
         {/* ASSET & LIABILITY SUMMARY */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <Card>
-            <CardContent className="p-5 space-y-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 min-w-0 w-full">
+          <Card className="min-w-0 w-full">
+            <CardContent className="p-4 sm:p-5 space-y-1 min-w-0">
               <span className="text-xs font-medium text-slate-500">Total Capital Assets</span>
               <div className="text-2xl font-bold text-teal-800 font-mono">
                 {report ? formatCurrency(report.total_assets) : '$472,800.00'}
@@ -79,16 +79,16 @@ export default function AdminReportsPage() {
         </div>
 
         {/* MONTHLY TRENDS TABLE */}
-        <Card>
-          <CardHeader>
+        <Card className="min-w-0 w-full overflow-hidden">
+          <CardHeader className="p-4 sm:p-5 pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle>5-Month Capital Inflow & Lending Velocity</CardTitle>
+              <CardTitle className="text-sm sm:text-base">5-Month Capital Inflow & Lending Velocity</CardTitle>
               <Badge variant="outline" className="text-[10px]">Comparative Trends</Badge>
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto max-w-full">
+              <table className="w-full min-w-[600px] text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
                   <tr>
                     <th className="p-3 pl-6">Period</th>

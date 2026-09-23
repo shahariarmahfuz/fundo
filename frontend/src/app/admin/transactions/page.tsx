@@ -30,27 +30,27 @@ export default function AdminTransactionsPage() {
   }, []);
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto">
+    <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Financial Transactions Audit Trail"
         subtitle="Immutable audit log of all fund balance movements, credits, and debits"
       />
 
-      <div className="p-8 space-y-6 max-w-7xl mx-auto w-full">
-        <div className="flex items-center justify-between">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-            <ShieldCheck className="h-4 w-4 text-teal-700" />
+            <ShieldCheck className="h-4 w-4 text-teal-700 shrink-0" />
             <span>Append-only non-destructive accounting ledger record</span>
           </div>
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="outline" className="text-xs shrink-0">
             {transactions.length} Logged Entries
           </Badge>
         </div>
 
-        <Card>
+        <Card className="min-w-0 w-full overflow-hidden">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto max-w-full">
+              <table className="w-full min-w-[700px] text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
                   <tr>
                     <th className="p-3 pl-6">Tx Number</th>

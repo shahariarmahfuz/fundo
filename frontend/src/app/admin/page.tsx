@@ -52,16 +52,16 @@ export default async function AdminDashboardPage() {
   const summary = data;
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto">
+    <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Foundation Overview"
         subtitle="Consolidated real-time operational and fiduciary dashboard"
         userRole="Super Admin"
       />
 
-      <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto w-full min-w-0">
         {/* TOP METRICS GRID */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 min-w-0 w-full">
           <MetricCard
             title="Total Foundation Balance"
             value={formatCurrency(summary.total_funds_balance)}
@@ -100,18 +100,18 @@ export default async function AdminDashboardPage() {
         </div>
 
         {/* FUNDS BREAKDOWN & RECENT TRANSACTIONS */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 min-w-0 w-full">
           {/* Fund Pools */}
-          <Card className="lg:col-span-1 flex flex-col">
-            <CardHeader>
+          <Card className="lg:col-span-1 flex flex-col min-w-0 w-full">
+            <CardHeader className="p-4 sm:p-5 pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle>Fund Pool Balances</CardTitle>
+                <CardTitle className="text-sm sm:text-base">Fund Pool Balances</CardTitle>
                 <Badge variant="outline" className="text-[10px]">Real-Time</Badge>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4 pt-4 flex-1">
+            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-5 pt-3 sm:pt-4 flex-1 min-w-0">
               {summary.fund_distribution.map((fund) => (
-                <div key={fund.code} className="p-3 rounded-md border border-slate-100 bg-slate-50/50 space-y-1">
+                <div key={fund.code} className="p-3 rounded-md border border-slate-100 bg-slate-50/50 space-y-1 min-w-0">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-mono text-[10px] text-slate-400 font-semibold">{fund.code}</span>
                     <Badge variant="outline" className="text-[10px]">{fund.fund_type}</Badge>
@@ -126,16 +126,16 @@ export default async function AdminDashboardPage() {
           </Card>
 
           {/* Recent Audit Transactions */}
-          <Card className="lg:col-span-2 flex flex-col">
-            <CardHeader>
+          <Card className="lg:col-span-2 flex flex-col min-w-0 w-full overflow-hidden">
+            <CardHeader className="p-4 sm:p-5 pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle>Recent Financial Audit Trail</CardTitle>
-                <span className="text-xs text-slate-400">PostgreSQL Immutable Log</span>
+                <CardTitle className="text-sm sm:text-base">Recent Financial Audit Trail</CardTitle>
+                <span className="text-[10px] sm:text-xs text-slate-400">PostgreSQL Immutable Log</span>
               </div>
             </CardHeader>
-            <CardContent className="p-0 flex-1">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+            <CardContent className="p-0 flex-1 min-w-0">
+              <div className="overflow-x-auto max-w-full">
+                <table className="w-full min-w-[550px] text-left text-xs">
                   <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-medium">
                     <tr>
                       <th className="p-3 pl-6">Tx Number</th>

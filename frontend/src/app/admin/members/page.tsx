@@ -102,13 +102,13 @@ export default function AdminMembersPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto">
+    <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Member Directory"
         subtitle="Manage registered foundation community members and circle affiliations"
       />
 
-      <div className="p-8 space-y-6 max-w-7xl mx-auto w-full">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
         {/* ACTION & SEARCH BAR */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           <form onSubmit={handleSearch} className="flex items-center gap-2 max-w-md w-full">
@@ -143,10 +143,10 @@ export default function AdminMembersPage() {
         </div>
 
         {/* MEMBERS TABLE */}
-        <Card>
+        <Card className="min-w-0 w-full overflow-hidden">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto max-w-full">
+              <table className="w-full min-w-[640px] text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
                   <tr>
                     <th className="p-3 pl-6">Member #</th>
@@ -216,8 +216,8 @@ export default function AdminMembersPage() {
 
       {/* ENROLL MEMBER MODAL */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg border border-slate-200 shadow-xl max-w-lg w-full p-6 space-y-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-xl max-w-lg w-full p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-sm font-bold text-slate-900">Enroll New Community Member</h3>
               <button
@@ -236,7 +236,7 @@ export default function AdminMembersPage() {
             )}
 
             <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-1">
                   <label className="text-[11px] font-medium text-slate-700">Member #</label>
                   <Input
@@ -256,7 +256,7 @@ export default function AdminMembersPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-1">
                   <label className="text-[11px] font-medium text-slate-700">Phone</label>
                   <Input
@@ -276,7 +276,7 @@ export default function AdminMembersPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-1">
                   <label className="text-[11px] font-medium text-slate-700">Savings Circle Group</label>
                   <select

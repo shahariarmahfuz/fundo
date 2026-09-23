@@ -88,16 +88,16 @@ export default function AdminBeneficiariesPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto">
+    <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Beneficiary Registry"
         subtitle="Manage verified recipients of charitable stipends, orphan care, and emergency grants"
       />
 
-      <div className="p-8 space-y-6 max-w-7xl mx-auto w-full">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
         {/* FILTERS */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1 max-w-lg">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 flex-1 max-w-lg">
             <form onSubmit={handleSearch} className="relative flex-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <Input
@@ -125,7 +125,7 @@ export default function AdminBeneficiariesPage() {
             onClick={() => {
               setForm({
                 ...form,
-                beneficiary_code: `BEN-${Math.floor(2000 + Math.random() * 8000)}`
+                beneficiary_code: `BEN-${Math.floor(1000 + Math.random() * 9000)}`
               });
               setShowModal(true);
             }}
@@ -138,10 +138,10 @@ export default function AdminBeneficiariesPage() {
         </div>
 
         {/* TABLE */}
-        <Card>
+        <Card className="min-w-0 w-full overflow-hidden">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto max-w-full">
+              <table className="w-full min-w-[650px] text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
                   <tr>
                     <th className="p-3 pl-6">Code</th>
@@ -209,8 +209,8 @@ export default function AdminBeneficiariesPage() {
 
       {/* MODAL */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg border border-slate-200 shadow-xl max-w-lg w-full p-6 space-y-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-xl max-w-lg w-full p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-sm font-bold text-slate-900">Register Beneficiary</h3>
               <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
@@ -226,7 +226,7 @@ export default function AdminBeneficiariesPage() {
             )}
 
             <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-1">
                   <label className="text-[11px] font-medium text-slate-700">Code</label>
                   <Input
@@ -246,7 +246,7 @@ export default function AdminBeneficiariesPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-1">
                   <label className="text-[11px] font-medium text-slate-700">Category</label>
                   <select

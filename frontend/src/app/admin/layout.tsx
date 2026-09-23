@@ -1,4 +1,5 @@
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { AdminNavProvider } from '@/context/AdminNavContext';
 
 export const metadata = {
   title: 'Fundo Foundation Management Platform',
@@ -11,11 +12,13 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex bg-slate-50 font-sans">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {children}
+    <AdminNavProvider>
+      <div className="min-h-screen flex bg-slate-50 font-sans relative">
+        <AdminSidebar />
+        <div className="flex-1 flex flex-col min-w-0 w-full overflow-hidden">
+          {children}
+        </div>
       </div>
-    </div>
+    </AdminNavProvider>
   );
 }

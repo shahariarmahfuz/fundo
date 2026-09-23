@@ -34,17 +34,17 @@ export default function AdminLedgersPage() {
   const isBalanced = Math.abs(totalDebits - totalCredits) < 0.01;
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto">
+    <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Double-Entry Accounting Journal"
         subtitle="Chart of accounts, general ledger entries, and debits & credits balance verification"
       />
 
-      <div className="p-8 space-y-6 max-w-7xl mx-auto w-full">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
         {/* SUMMARY BALANCE BAR */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 rounded-lg bg-white border border-slate-200 gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-3 sm:p-4 rounded-lg bg-white border border-slate-200 gap-3 sm:gap-4 min-w-0">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
             <div>
               <div className="text-xs font-bold text-slate-900">
                 {isBalanced ? 'Journal Trial Balance: Balanced' : 'Trial Balance: Variance Detected'}
@@ -55,7 +55,7 @@ export default function AdminLedgersPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-6 text-xs">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-xs">
             <div>
               <span className="text-slate-400">Total Debits: </span>
               <span className="font-mono font-bold text-slate-900">{formatCurrency(totalDebits)}</span>
@@ -67,10 +67,10 @@ export default function AdminLedgersPage() {
           </div>
         </div>
 
-        <Card>
+        <Card className="min-w-0 w-full overflow-hidden">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto max-w-full">
+              <table className="w-full min-w-[700px] text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
                   <tr>
                     <th className="p-3 pl-6">Journal Ref</th>

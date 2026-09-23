@@ -116,14 +116,14 @@ export default function AdminLoansPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto">
+    <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Qard Hasan Micro-Loan Portfolio"
         subtitle="Manage interest-free revolving credit facilities, disbursements, and recovery cycles"
       />
 
-      <div className="p-8 space-y-6 max-w-7xl mx-auto w-full">
-        <div className="flex items-center justify-between">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="text-xs text-slate-500 font-medium">
             100% Non-Interest Revolving Capital Cycle
           </div>
@@ -131,17 +131,17 @@ export default function AdminLoansPage() {
           <Button
             onClick={() => setShowDisburseModal(true)}
             size="sm"
-            className="gap-1.5"
+            className="gap-1.5 shrink-0"
           >
             <Plus className="h-4 w-4" />
             <span>Disburse Revolving Loan</span>
           </Button>
         </div>
 
-        <Card>
+        <Card className="min-w-0 w-full overflow-hidden">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto max-w-full">
+              <table className="w-full min-w-[750px] text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
                   <tr>
                     <th className="p-3 pl-6">Loan #</th>

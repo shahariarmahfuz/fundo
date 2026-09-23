@@ -51,13 +51,13 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto">
+    <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Foundation System Configuration"
         subtitle="Manage global operational parameters, public metadata, and policy controls"
       />
 
-      <div className="p-8 space-y-6 max-w-4xl mx-auto w-full">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-4xl mx-auto w-full min-w-0">
         {saveStatus && (
           <div className="p-3 rounded-md bg-teal-50 border border-teal-200 text-teal-800 text-xs flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 shrink-0 text-teal-700" />

@@ -59,14 +59,14 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto">
+    <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Administrative Staff & Role Permissions"
         subtitle="Manage operators, compliance officers, field supervisors, and portal access"
       />
 
-      <div className="p-8 space-y-6 max-w-7xl mx-auto w-full">
-        <div className="flex items-center justify-between">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="text-xs text-slate-500 font-medium">
             Role-Based Access Control (RBAC) System
           </div>
@@ -74,17 +74,17 @@ export default function AdminUsersPage() {
           <Button
             onClick={() => setShowModal(true)}
             size="sm"
-            className="gap-1.5"
+            className="gap-1.5 shrink-0"
           >
             <UserPlus className="h-4 w-4" />
             <span>Create Staff User</span>
           </Button>
         </div>
 
-        <Card>
+        <Card className="min-w-0 w-full overflow-hidden">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto max-w-full">
+              <table className="w-full min-w-[650px] text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
                   <tr>
                     <th className="p-3 pl-6">Full Name</th>

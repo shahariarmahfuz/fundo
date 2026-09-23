@@ -64,7 +64,7 @@ export function PublicFooter() {
                 <span>+1 (800) 555-FUNDO</span>
               </li>
               <li className="pt-2">
-                <Link href="/admin/login" className="inline-flex items-center gap-1 text-teal-700 hover:underline">
+                <Link href="/login" className="inline-flex items-center gap-1 text-teal-700 hover:underline">
                   <span>Authorized Management Login</span>
                   <ExternalLink className="h-3 w-3" />
                 </Link>

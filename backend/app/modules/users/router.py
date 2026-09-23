@@ -1,6 +1,6 @@
 import uuid
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request, Response, Cookie
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -21,18 +21,27 @@ from app.modules.users.schemas import (
     TokenResponse
 )
 from app.modules.users.service import UserService
+from app.core.config import settings
 
 router = APIRouter(tags=["Users & Authentication"])
 
 
 async def get_current_user(
+    request: Request,
     token: Optional[str] = Depends(oauth2_scheme),
+    cookie_token: Optional[str] = Cookie(None, alias="fundo_access_token"),
     db: AsyncSession = Depends(get_db)
 ) -> User:
-    if not token:
+    # Accept token from Authorization header or HttpOnly cookie
+    auth_token = token or cookie_token
+    if not auth_token:
+        # Also check request.cookies directly in case alias parsing varies
+        auth_token = request.cookies.get("fundo_access_token")
+
+    if not auth_token:
         raise UnauthorizedException("Authentication token is missing")
 
-    payload = decode_access_token(token)
+    payload = decode_access_token(auth_token)
     if not payload:
         raise UnauthorizedException("Invalid or expired access token")
 
@@ -60,6 +69,7 @@ def require_roles(*allowed_roles: str):
 @router.post("/auth/login", response_model=TokenResponse)
 async def login(
     login_data: LoginRequest,
+    response: Response,
     db: AsyncSession = Depends(get_db)
 ):
     service = UserService(db)
@@ -73,11 +83,34 @@ async def login(
         "role": user.role
     }
     access_token = create_access_token(token_data)
+
+    # Set secure HttpOnly cookie
+    response.set_cookie(
+        key="fundo_access_token",
+        value=access_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        path="/"
+    )
+
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
         user=UserResponse.model_validate(user)
     )
+
+
+@router.post("/auth/logout")
+async def logout(response: Response):
+    response.delete_cookie(
+        key="fundo_access_token",
+        path="/",
+        httponly=True,
+        samesite="lax"
+    )
+    return {"success": True, "detail": "Logged out successfully"}
 
 
 @router.get("/auth/me", response_model=UserResponse)

@@ -42,9 +42,18 @@ const navItems = [
 export function AdminSidebar() {
   const pathname = usePathname();
 
-  const handleLogout = () => {
+  if (pathname === '/login' || pathname === '/admin/login') {
+    return null;
+  }
+
+  const handleLogout = async () => {
+    try {
+      await ApiClient.post('/auth/logout');
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
     ApiClient.setToken(null);
-    window.location.href = '/admin/login';
+    window.location.href = '/login';
   };
 
   return (

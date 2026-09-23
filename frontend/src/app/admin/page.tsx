@@ -15,23 +15,23 @@ import {
 } from 'lucide-react';
 import { DashboardSummary } from '@/types/admin';
 
-async function getDashboardData(): Promise<DashboardSummary | null> {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-  try {
-    // Generate an admin bearer token or server-to-server request
-    // For server components in same monolith or backend, we can query backend
-    // Or authenticate as staff service
-    const loginRes = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'admin@fundo.org', password: 'admin123456' }),
-      cache: 'no-store'
-    });
-    if (!loginRes.ok) return null;
-    const { access_token } = await loginRes.json();
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
+async function getDashboardData(): Promise<DashboardSummary | null> {
+  const cookieStore = cookies();
+  const token = cookieStore.get('fundo_access_token')?.value;
+  if (!token) {
+    return null;
+  }
+
+  const API_URL = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+  try {
     const summaryRes = await fetch(`${API_URL}/reports/dashboard`, {
-      headers: { Authorization: `Bearer ${access_token}` },
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Cookie': `fundo_access_token=${token}`
+      },
       cache: 'no-store'
     });
 
@@ -45,26 +45,11 @@ async function getDashboardData(): Promise<DashboardSummary | null> {
 
 export default async function AdminDashboardPage() {
   const data = await getDashboardData();
+  if (!data) {
+    redirect('/login');
+  }
 
-  const summary = data || {
-    total_members: 6,
-    active_members: 6,
-    total_beneficiaries: 4,
-    total_groups: 3,
-    total_funds_balance: 469700.0,
-    total_donations: 100000.0,
-    total_contributions: 800.0,
-    total_loans_disbursed: 5400.0,
-    active_loans_count: 2,
-    total_loans_outstanding: 3100.0,
-    fund_distribution: [
-      { name: 'General Operations & Humanitarian Fund', code: 'GEN-01', balance: 164500.0, fund_type: 'general' },
-      { name: 'Zakat & Sadaqa Charitable Relief Pool', code: 'ZAK-02', balance: 98200.0, fund_type: 'sadaqa_zakat' },
-      { name: 'Qard Hasan Micro-Loan Revolving Pool', code: 'REV-03', balance: 135000.0, fund_type: 'loan_pool' },
-      { name: 'Orphan & Student Education Endowment', code: 'EDU-04', balance: 72000.0, fund_type: 'endowment' }
-    ],
-    recent_transactions: []
-  };
+  const summary = data;
 
   return (
     <div className="flex-1 flex flex-col overflow-y-auto">

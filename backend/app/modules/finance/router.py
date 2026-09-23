@@ -15,8 +15,8 @@ from app.modules.finance.schemas import (
     LedgerEntryResponse
 )
 from app.modules.finance.service import FinanceService
-from app.modules.users.router import require_roles
-from app.modules.users.models import User, UserRole
+from app.modules.users.router import require_permission
+from app.modules.users.models import User
 
 router = APIRouter(prefix="/finance", tags=["Finance & Accounting"])
 
@@ -25,7 +25,7 @@ router = APIRouter(prefix="/finance", tags=["Finance & Accounting"])
 @router.get("/funds", response_model=List[FundResponse])
 async def list_funds(
     active_only: bool = Query(False),
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF, UserRole.VIEWER)),
+    current_user: User = Depends(require_permission("finance.view")),
     db: AsyncSession = Depends(get_db)
 ):
     service = FinanceService(db)
@@ -36,7 +36,7 @@ async def list_funds(
 @router.post("/funds", response_model=FundResponse, status_code=status.HTTP_201_CREATED)
 async def create_fund(
     fund_in: FundCreate,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN)),
+    current_user: User = Depends(require_permission("finance.create")),
     db: AsyncSession = Depends(get_db)
 ):
     service = FinanceService(db)
@@ -52,7 +52,7 @@ async def list_donations(
     search: Optional[str] = Query(None),
     fund_id: Optional[uuid.UUID] = Query(None),
     category: Optional[str] = Query(None),
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF, UserRole.VIEWER)),
+    current_user: User = Depends(require_permission("donations.view")),
     db: AsyncSession = Depends(get_db)
 ):
     service = FinanceService(db)
@@ -101,7 +101,7 @@ async def list_donations(
 @router.post("/donations", response_model=DonationResponse, status_code=status.HTTP_201_CREATED)
 async def create_donation(
     d_in: DonationCreate,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF)),
+    current_user: User = Depends(require_permission("donations.create")),
     db: AsyncSession = Depends(get_db)
 ):
     service = FinanceService(db)
@@ -134,7 +134,7 @@ async def list_transactions(
     page_size: int = Query(20, ge=1, le=100),
     fund_id: Optional[uuid.UUID] = Query(None),
     transaction_type: Optional[str] = Query(None),
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF, UserRole.VIEWER)),
+    current_user: User = Depends(require_permission("finance.view")),
     db: AsyncSession = Depends(get_db)
 ):
     service = FinanceService(db)
@@ -182,7 +182,7 @@ async def list_ledger_entries(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     account_type: Optional[str] = Query(None),
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF, UserRole.VIEWER)),
+    current_user: User = Depends(require_permission("finance.view")),
     db: AsyncSession = Depends(get_db)
 ):
     service = FinanceService(db)

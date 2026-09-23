@@ -7,8 +7,8 @@ from app.core.database import get_db
 from app.core.pagination import PaginatedResponse
 from app.modules.contributions.schemas import ContributionCreate, ContributionResponse
 from app.modules.contributions.service import ContributionService
-from app.modules.users.router import require_roles
-from app.modules.users.models import User, UserRole
+from app.modules.users.router import require_permission
+from app.modules.users.models import User
 
 router = APIRouter(prefix="/contributions", tags=["Contributions"])
 
@@ -20,7 +20,7 @@ async def list_contributions(
     member_id: Optional[uuid.UUID] = Query(None),
     fund_id: Optional[uuid.UUID] = Query(None),
     search: Optional[str] = Query(None),
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF, UserRole.VIEWER)),
+    current_user: User = Depends(require_permission("contributions.view")),
     db: AsyncSession = Depends(get_db)
 ):
     service = ContributionService(db)
@@ -67,7 +67,7 @@ async def list_contributions(
 @router.post("", response_model=ContributionResponse, status_code=status.HTTP_201_CREATED)
 async def record_contribution(
     c_in: ContributionCreate,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF)),
+    current_user: User = Depends(require_permission("contributions.create")),
     db: AsyncSession = Depends(get_db)
 ):
     service = ContributionService(db)

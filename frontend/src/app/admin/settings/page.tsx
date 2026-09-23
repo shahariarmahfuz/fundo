@@ -9,14 +9,21 @@ import { Badge } from '@/components/ui/Badge';
 import { ApiClient } from '@/lib/api';
 import { SystemSetting } from '@/types/admin';
 import { Settings, Save, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { AccessDenied } from '@/components/admin/PermissionGuard';
 
 export default function AdminSettingsPage() {
+  const { hasPermission, loading: authLoading, user } = useAuth();
   const [settingsList, setSettingsList] = useState<SystemSetting[]>([]);
   const [loading, setLoading] = useState(true);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
   const loadData = async () => {
+    if (!hasPermission('settings.view')) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await ApiClient.get<SystemSetting[]>('/settings');
@@ -34,8 +41,12 @@ export default function AdminSettingsPage() {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!authLoading && hasPermission('settings.view')) {
+      loadData();
+    } else if (!authLoading) {
+      setLoading(false);
+    }
+  }, [authLoading, hasPermission]);
 
   const handleSave = async (key: string) => {
     try {
@@ -50,11 +61,28 @@ export default function AdminSettingsPage() {
     }
   };
 
+  if (!authLoading && !hasPermission('settings.view')) {
+    return (
+      <div className="flex-1 flex flex-col min-w-0 w-full">
+        <AdminHeader
+          title="Foundation System Configuration"
+          subtitle="Global operational parameters and policy controls"
+          userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
+        />
+        <AccessDenied
+          permission="settings.view"
+          message="You do not have authorization to view system configuration settings."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Foundation System Configuration"
         subtitle="Manage global operational parameters, public metadata, and policy controls"
+        userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
       />
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-4xl mx-auto w-full min-w-0">
@@ -91,21 +119,24 @@ export default function AdminSettingsPage() {
                       <Input
                         value={editValues[setting.key] ?? setting.value}
                         onChange={(e) => setEditValues({ ...editValues, [setting.key]: e.target.value })}
+                        disabled={!hasPermission('settings.edit')}
                         className="h-8 text-xs font-mono"
                       />
                     </div>
                   </div>
 
-                  <div className="shrink-0 sm:self-end">
-                    <Button
-                      size="sm"
-                      onClick={() => handleSave(setting.key)}
-                      className="gap-1.5 text-xs h-8"
-                    >
-                      <Save className="h-3.5 w-3.5" />
-                      <span>Save</span>
-                    </Button>
-                  </div>
+                  {hasPermission('settings.edit') && (
+                    <div className="shrink-0 sm:self-end">
+                      <Button
+                        size="sm"
+                        onClick={() => handleSave(setting.key)}
+                        className="gap-1.5 text-xs h-8"
+                      >
+                        <Save className="h-3.5 w-3.5" />
+                        <span>Save</span>
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))

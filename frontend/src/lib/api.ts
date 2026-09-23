@@ -1,3 +1,5 @@
+import { User } from '@/types/api';
+
 const getBaseUrl = () => {
   if (typeof window !== 'undefined') {
     return '/api/v1';
@@ -9,6 +11,7 @@ const BASE_URL = getBaseUrl();
 
 export class ApiClient {
   private static token: string | null = null;
+  private static user: User | null = null;
 
   static setToken(token: string | null) {
     this.token = token;
@@ -31,6 +34,43 @@ export class ApiClient {
       }
     }
     return null;
+  }
+
+  static setUser(user: User | null) {
+    this.user = user;
+    if (typeof window !== 'undefined') {
+      if (user) {
+        sessionStorage.setItem('fundo_auth_user', JSON.stringify(user));
+      } else {
+        sessionStorage.removeItem('fundo_auth_user');
+      }
+    }
+  }
+
+  static getUser(): User | null {
+    if (this.user) return this.user;
+    if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('fundo_auth_user');
+      if (stored) {
+        try {
+          this.user = JSON.parse(stored);
+          return this.user;
+        } catch {
+          sessionStorage.removeItem('fundo_auth_user');
+        }
+      }
+    }
+    return null;
+  }
+
+  static hasPermission(permissionCode: string): boolean {
+    const user = this.getUser();
+    if (!user) return false;
+    if (user.is_superadmin || user.role === 'super_admin' || user.role === 'superadmin') return true;
+    if (user.permissions && Array.isArray(user.permissions)) {
+      return user.permissions.includes(permissionCode);
+    }
+    return false;
   }
 
   static async fetch<T>(
@@ -59,6 +99,7 @@ export class ApiClient {
 
       if (response.status === 401) {
         this.setToken(null);
+        this.setUser(null);
         if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
           window.location.href = '/login';
         }
@@ -66,7 +107,9 @@ export class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ detail: response.statusText }));
-        throw new Error(errorData.detail || `Request failed with status ${response.status}`);
+        const err = new Error(errorData.detail || `Request failed with status ${response.status}`);
+        (err as any).status = response.status;
+        throw err;
       }
 
       return (await response.json()) as T;

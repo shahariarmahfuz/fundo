@@ -11,8 +11,11 @@ import { Beneficiary } from '@/types/admin';
 import { PaginatedResponse } from '@/types/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { HeartHandshake, Search, Plus, UserPlus, AlertCircle, X } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { AccessDenied } from '@/components/admin/PermissionGuard';
 
 export default function AdminBeneficiariesPage() {
+  const { hasPermission, loading: authLoading, user } = useAuth();
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -32,6 +35,10 @@ export default function AdminBeneficiariesPage() {
   });
 
   const loadData = async () => {
+    if (!hasPermission('beneficiaries.view')) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       let url = `/beneficiaries?page=1&page_size=50`;
@@ -47,8 +54,12 @@ export default function AdminBeneficiariesPage() {
   };
 
   useEffect(() => {
-    loadData();
-  }, [category]);
+    if (!authLoading && hasPermission('beneficiaries.view')) {
+      loadData();
+    } else if (!authLoading) {
+      setLoading(false);
+    }
+  }, [authLoading, hasPermission, category]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,11 +98,28 @@ export default function AdminBeneficiariesPage() {
     }
   };
 
+  if (!authLoading && !hasPermission('beneficiaries.view')) {
+    return (
+      <div className="flex-1 flex flex-col min-w-0 w-full">
+        <AdminHeader
+          title="Beneficiary Registry"
+          subtitle="Charitable stipends, orphan care, and emergency grants"
+          userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
+        />
+        <AccessDenied
+          permission="beneficiaries.view"
+          message="You do not have authorization to view the beneficiaries registry."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Beneficiary Registry"
         subtitle="Manage verified recipients of charitable stipends, orphan care, and emergency grants"
+        userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
       />
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
@@ -121,20 +149,22 @@ export default function AdminBeneficiariesPage() {
             </select>
           </div>
 
-          <Button
-            onClick={() => {
-              setForm({
-                ...form,
-                beneficiary_code: `BEN-${Math.floor(1000 + Math.random() * 9000)}`
-              });
-              setShowModal(true);
-            }}
-            size="sm"
-            className="gap-1.5 shrink-0"
-          >
-            <UserPlus className="h-4 w-4" />
-            <span>Add Beneficiary</span>
-          </Button>
+          {hasPermission('beneficiaries.create') && (
+            <Button
+              onClick={() => {
+                setForm({
+                  ...form,
+                  beneficiary_code: `BEN-${Math.floor(1000 + Math.random() * 9000)}`
+                });
+                setShowModal(true);
+              }}
+              size="sm"
+              className="gap-1.5 shrink-0"
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>Add Beneficiary</span>
+            </Button>
+          )}
         </div>
 
         {/* TABLE */}

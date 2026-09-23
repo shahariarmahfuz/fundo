@@ -11,8 +11,11 @@ import { Group } from '@/types/admin';
 import { PaginatedResponse } from '@/types/api';
 import { formatDate } from '@/lib/utils';
 import { Network, Plus, Users, Search, AlertCircle, X } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { AccessDenied } from '@/components/admin/PermissionGuard';
 
 export default function AdminGroupsPage() {
+  const { hasPermission, loading: authLoading, user } = useAuth();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -30,6 +33,10 @@ export default function AdminGroupsPage() {
   });
 
   const loadData = async () => {
+    if (!hasPermission('groups.view')) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       let url = `/groups?page=1&page_size=50`;
@@ -44,8 +51,12 @@ export default function AdminGroupsPage() {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!authLoading && hasPermission('groups.view')) {
+      loadData();
+    } else if (!authLoading) {
+      setLoading(false);
+    }
+  }, [authLoading, hasPermission]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,11 +74,28 @@ export default function AdminGroupsPage() {
     }
   };
 
+  if (!authLoading && !hasPermission('groups.view')) {
+    return (
+      <div className="flex-1 flex flex-col min-w-0 w-full">
+        <AdminHeader
+          title="Community Savings Circles & Groups"
+          subtitle="Grassroots clusters and mutual accountability groups"
+          userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
+        />
+        <AccessDenied
+          permission="groups.view"
+          message="You do not have authorization to view the groups and savings circles."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Community Savings Circles & Groups"
         subtitle="Manage grassroots clusters, mutual accountability groups, and meeting cadences"
+        userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
       />
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
@@ -82,20 +110,22 @@ export default function AdminGroupsPage() {
             />
           </form>
 
-          <Button
-            onClick={() => {
-              setForm({
-                ...form,
-                code: `GRP-${Math.floor(100 + Math.random() * 900)}`
-              });
-              setShowModal(true);
-            }}
-            size="sm"
-            className="gap-1.5 shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Form New Circle</span>
-          </Button>
+          {hasPermission('groups.create') && (
+            <Button
+              onClick={() => {
+                setForm({
+                  ...form,
+                  code: `GRP-${Math.floor(100 + Math.random() * 900)}`
+                });
+                setShowModal(true);
+              }}
+              size="sm"
+              className="gap-1.5 shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Form New Circle</span>
+            </Button>
+          )}
         </div>
 
         <Card className="min-w-0 w-full overflow-hidden">

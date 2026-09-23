@@ -11,6 +11,8 @@ import { Member, Group } from '@/types/admin';
 import { PaginatedResponse } from '@/types/api';
 import { formatDate } from '@/lib/utils';
 import { Users, Search, Plus, UserPlus, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { AccessDenied } from '@/components/admin/PermissionGuard';
 
 export default function AdminMembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
@@ -20,6 +22,8 @@ export default function AdminMembersPage() {
   const [showModal, setShowModal] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  const { hasPermission, loading: authLoading, user } = useAuth();
 
   const [form, setForm] = useState({
     member_number: '',
@@ -33,6 +37,10 @@ export default function AdminMembersPage() {
   });
 
   const loadMembers = async () => {
+    if (!hasPermission('members.view')) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await ApiClient.get<PaginatedResponse<Member>>(
@@ -56,9 +64,13 @@ export default function AdminMembersPage() {
   };
 
   useEffect(() => {
-    loadMembers();
-    loadGroups();
-  }, []);
+    if (!authLoading && hasPermission('members.view')) {
+      loadMembers();
+      loadGroups();
+    } else if (!authLoading) {
+      setLoading(false);
+    }
+  }, [authLoading, hasPermission]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,11 +113,28 @@ export default function AdminMembersPage() {
     }
   };
 
+  if (!authLoading && !hasPermission('members.view')) {
+    return (
+      <div className="flex-1 flex flex-col min-w-0 w-full">
+        <AdminHeader
+          title="Member Directory"
+          subtitle="Registered participants and mutual savings community"
+          userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
+        />
+        <AccessDenied
+          permission="members.view"
+          message="You do not have authorization to view the members directory."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Member Directory"
         subtitle="Manage registered foundation community members and circle affiliations"
+        userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
       />
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
@@ -126,20 +155,22 @@ export default function AdminMembersPage() {
             </Button>
           </form>
 
-          <Button
-            onClick={() => {
-              setForm({
-                ...form,
-                member_number: `MBR-${Math.floor(1000 + Math.random() * 9000)}`
-              });
-              setShowModal(true);
-            }}
-            size="sm"
-            className="gap-1.5 shrink-0"
-          >
-            <UserPlus className="h-4 w-4" />
-            <span>Enroll Member</span>
-          </Button>
+          {hasPermission('members.create') && (
+            <Button
+              onClick={() => {
+                setForm({
+                  ...form,
+                  member_number: `MBR-${Math.floor(1000 + Math.random() * 9000)}`
+                });
+                setShowModal(true);
+              }}
+              size="sm"
+              className="gap-1.5 shrink-0"
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>Enroll Member</span>
+            </Button>
+          )}
         </div>
 
         {/* MEMBERS TABLE */}

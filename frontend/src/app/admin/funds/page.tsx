@@ -10,8 +10,11 @@ import { ApiClient } from '@/lib/api';
 import { Fund } from '@/types/admin';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Landmark, Plus, AlertCircle, X } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { AccessDenied } from '@/components/admin/PermissionGuard';
 
 export default function AdminFundsPage() {
+  const { hasPermission, loading: authLoading, user } = useAuth();
   const [funds, setFunds] = useState<Fund[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -28,6 +31,10 @@ export default function AdminFundsPage() {
   });
 
   const loadData = async () => {
+    if (!hasPermission('finance.view')) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await ApiClient.get<Fund[]>('/finance/funds');
@@ -40,8 +47,12 @@ export default function AdminFundsPage() {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!authLoading && hasPermission('finance.view')) {
+      loadData();
+    } else if (!authLoading) {
+      setLoading(false);
+    }
+  }, [authLoading, hasPermission]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,11 +77,28 @@ export default function AdminFundsPage() {
     }
   };
 
+  if (!authLoading && !hasPermission('finance.view')) {
+    return (
+      <div className="flex-1 flex flex-col min-w-0 w-full">
+        <AdminHeader
+          title="Foundation Funds & Capital Accounts"
+          subtitle="Segregated fiduciary accounts and permanent endowments"
+          userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
+        />
+        <AccessDenied
+          permission="finance.view"
+          message="You do not have authorization to view the financial funds and capital accounts."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Foundation Funds & Capital Accounts"
         subtitle="Manage segregated accounts, revolving pools, and permanent endowments"
+        userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
       />
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
@@ -79,20 +107,22 @@ export default function AdminFundsPage() {
             PostgreSQL Multi-Fund Double-Entry Accounting
           </div>
 
-          <Button
-            onClick={() => {
-              setForm({
-                ...form,
-                code: `FND-0${funds.length + 1}`
-              });
-              setShowModal(true);
-            }}
-            size="sm"
-            className="gap-1.5 shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Establish Fund</span>
-          </Button>
+          {hasPermission('finance.create') && (
+            <Button
+              onClick={() => {
+                setForm({
+                  ...form,
+                  code: `FND-0${funds.length + 1}`
+                });
+                setShowModal(true);
+              }}
+              size="sm"
+              className="gap-1.5 shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Establish Fund</span>
+            </Button>
+          )}
         </div>
 
         <Card className="min-w-0 w-full overflow-hidden">

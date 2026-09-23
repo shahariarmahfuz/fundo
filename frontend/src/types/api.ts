@@ -6,13 +6,33 @@ export interface PaginatedResponse<T> {
   total_pages: number;
 }
 
+export interface Permission {
+  id: string;
+  code: string;
+  module: string;
+  action: string;
+  description?: string | null;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  display_name: string;
+  description?: string | null;
+  is_system: boolean;
+  permissions?: Permission[];
+}
+
 export interface User {
   id: string;
   email: string;
   full_name: string;
-  role: 'superadmin' | 'admin' | 'staff' | 'viewer';
+  role: string;
   phone?: string | null;
   is_active: boolean;
+  roles?: string[];
+  permissions?: string[];
+  is_superadmin?: boolean;
   created_at: string;
   updated_at: string;
 }

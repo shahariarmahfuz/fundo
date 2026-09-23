@@ -7,8 +7,9 @@ from app.core.database import get_db
 from app.core.pagination import PaginatedResponse
 from app.modules.beneficiaries.schemas import BeneficiaryCreate, BeneficiaryUpdate, BeneficiaryResponse
 from app.modules.beneficiaries.service import BeneficiaryService
-from app.modules.users.router import require_roles
-from app.modules.users.models import User, UserRole
+from app.modules.users.router import require_permission
+from app.modules.users.models import User
+from app.core.exceptions import NotFoundException
 
 router = APIRouter(prefix="/beneficiaries", tags=["Beneficiaries"])
 
@@ -20,7 +21,7 @@ async def list_beneficiaries(
     search: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF, UserRole.VIEWER)),
+    current_user: User = Depends(require_permission("beneficiaries.view")),
     db: AsyncSession = Depends(get_db)
 ):
     service = BeneficiaryService(db)
@@ -46,7 +47,7 @@ async def list_beneficiaries(
 @router.post("", response_model=BeneficiaryResponse, status_code=status.HTTP_201_CREATED)
 async def create_beneficiary(
     b_in: BeneficiaryCreate,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF)),
+    current_user: User = Depends(require_permission("beneficiaries.create")),
     db: AsyncSession = Depends(get_db)
 ):
     service = BeneficiaryService(db)
@@ -56,13 +57,12 @@ async def create_beneficiary(
 @router.get("/{beneficiary_id}", response_model=BeneficiaryResponse)
 async def get_beneficiary(
     beneficiary_id: uuid.UUID,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF, UserRole.VIEWER)),
+    current_user: User = Depends(require_permission("beneficiaries.view")),
     db: AsyncSession = Depends(get_db)
 ):
     service = BeneficiaryService(db)
     b = await service.get_by_id(beneficiary_id)
     if not b:
-        from app.core.exceptions import NotFoundException
         raise NotFoundException("Beneficiary", beneficiary_id)
     return b
 
@@ -71,8 +71,23 @@ async def get_beneficiary(
 async def update_beneficiary(
     beneficiary_id: uuid.UUID,
     b_in: BeneficiaryUpdate,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF)),
+    current_user: User = Depends(require_permission("beneficiaries.edit")),
     db: AsyncSession = Depends(get_db)
 ):
     service = BeneficiaryService(db)
     return await service.update(beneficiary_id, b_in)
+
+
+@router.delete("/{beneficiary_id}")
+async def delete_beneficiary(
+    beneficiary_id: uuid.UUID,
+    current_user: User = Depends(require_permission("beneficiaries.delete")),
+    db: AsyncSession = Depends(get_db)
+):
+    service = BeneficiaryService(db)
+    b = await service.get_by_id(beneficiary_id)
+    if not b:
+        raise NotFoundException("Beneficiary", beneficiary_id)
+    await service.db.delete(b)
+    await service.db.commit()
+    return {"success": True, "detail": "Beneficiary deleted successfully"}

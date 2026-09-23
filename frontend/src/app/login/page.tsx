@@ -23,6 +23,9 @@ export default function LoginPage() {
       const data: any = await ApiClient.post('/auth/login', { email, password });
       if (data && data.access_token) {
         ApiClient.setToken(data.access_token);
+        if (data.user) {
+          ApiClient.setUser(data.user);
+        }
         // Handle redirect destination if provided in query parameters
         const params = new URLSearchParams(window.location.search);
         const redirectUrl = params.get('redirect') || '/admin';

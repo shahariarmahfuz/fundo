@@ -11,8 +11,11 @@ import { Loan, Member, Fund } from '@/types/admin';
 import { PaginatedResponse } from '@/types/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Coins, Plus, AlertCircle, X, CreditCard, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { AccessDenied } from '@/components/admin/PermissionGuard';
 
 export default function AdminLoansPage() {
+  const { hasPermission, loading: authLoading, user } = useAuth();
   const [loans, setLoans] = useState<Loan[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [funds, setFunds] = useState<Fund[]>([]);
@@ -40,22 +43,34 @@ export default function AdminLoansPage() {
   });
 
   const loadData = async () => {
+    if (!hasPermission('loans.view')) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
-      const [resL, resM, resF] = await Promise.all([
-        ApiClient.get<PaginatedResponse<Loan>>('/loans?page=1&page_size=50'),
-        ApiClient.get<PaginatedResponse<Member>>('/members?page=1&page_size=100'),
-        ApiClient.get<Fund[]>('/finance/funds?active_only=true')
-      ]);
+      const resL = await ApiClient.get<PaginatedResponse<Loan>>('/loans?page=1&page_size=50');
       setLoans(resL.items);
-      setMembers(resM.items);
-      setFunds(resF);
-      if (resM.items.length > 0 && !form.member_id) {
-        setForm(f => ({ ...f, member_id: resM.items[0].id }));
+
+      if (hasPermission('members.view')) {
+        try {
+          const resM = await ApiClient.get<PaginatedResponse<Member>>('/members?page=1&page_size=100');
+          setMembers(resM.items);
+          if (resM.items.length > 0 && !form.member_id) {
+            setForm(f => ({ ...f, member_id: resM.items[0].id }));
+          }
+        } catch {}
       }
-      const loanPool = resF.find(f => f.fund_type === 'loan_pool') || resF[0];
-      if (loanPool && !form.fund_id) {
-        setForm(f => ({ ...f, fund_id: loanPool.id }));
+
+      if (hasPermission('finance.view')) {
+        try {
+          const resF = await ApiClient.get<Fund[]>('/finance/funds?active_only=true');
+          setFunds(resF);
+          const loanPool = resF.find(f => f.fund_type === 'loan_pool') || resF[0];
+          if (loanPool && !form.fund_id) {
+            setForm(f => ({ ...f, fund_id: loanPool.id }));
+          }
+        } catch {}
       }
     } catch (err) {
       console.error('Failed to load loans:', err);
@@ -65,8 +80,12 @@ export default function AdminLoansPage() {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!authLoading && hasPermission('loans.view')) {
+      loadData();
+    } else if (!authLoading) {
+      setLoading(false);
+    }
+  }, [authLoading, hasPermission]);
 
   const handleDisburse = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,11 +134,28 @@ export default function AdminLoansPage() {
     }
   };
 
+  if (!authLoading && !hasPermission('loans.view')) {
+    return (
+      <div className="flex-1 flex flex-col min-w-0 w-full">
+        <AdminHeader
+          title="Qard Hasan Micro-Loan Portfolio"
+          subtitle="Interest-free revolving credit facilities and recovery cycles"
+          userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
+        />
+        <AccessDenied
+          permission="loans.view"
+          message="You do not have authorization to view the loan portfolio."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Qard Hasan Micro-Loan Portfolio"
         subtitle="Manage interest-free revolving credit facilities, disbursements, and recovery cycles"
+        userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
       />
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
@@ -128,14 +164,16 @@ export default function AdminLoansPage() {
             100% Non-Interest Revolving Capital Cycle
           </div>
 
-          <Button
-            onClick={() => setShowDisburseModal(true)}
-            size="sm"
-            className="gap-1.5 shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Disburse Revolving Loan</span>
-          </Button>
+          {hasPermission('loans.create') && (
+            <Button
+              onClick={() => setShowDisburseModal(true)}
+              size="sm"
+              className="gap-1.5 shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Disburse Revolving Loan</span>
+            </Button>
+          )}
         </div>
 
         <Card className="min-w-0 w-full overflow-hidden">
@@ -197,7 +235,7 @@ export default function AdminLoansPage() {
                           </Badge>
                         </td>
                         <td className="p-3 pr-6 text-right">
-                          {l.status === 'active' && (
+                          {l.status === 'active' && hasPermission('loans.create') && (
                             <Button
                               variant="outline"
                               size="sm"

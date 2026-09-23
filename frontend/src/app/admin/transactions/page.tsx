@@ -9,13 +9,20 @@ import { FinancialTransaction } from '@/types/admin';
 import { PaginatedResponse } from '@/types/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { ArrowLeftRight, ShieldCheck } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { AccessDenied } from '@/components/admin/PermissionGuard';
 
 export default function AdminTransactionsPage() {
+  const { hasPermission, loading: authLoading, user } = useAuth();
   const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
+      if (!hasPermission('finance.view')) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         const res = await ApiClient.get<PaginatedResponse<FinancialTransaction>>('/finance/transactions?page=1&page_size=50');
@@ -26,14 +33,33 @@ export default function AdminTransactionsPage() {
         setLoading(false);
       }
     };
-    loadData();
-  }, []);
+    if (!authLoading) {
+      loadData();
+    }
+  }, [authLoading, hasPermission]);
+
+  if (!authLoading && !hasPermission('finance.view')) {
+    return (
+      <div className="flex-1 flex flex-col min-w-0 w-full">
+        <AdminHeader
+          title="Financial Transactions Audit Trail"
+          subtitle="Immutable audit log of all fund balance movements"
+          userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
+        />
+        <AccessDenied
+          permission="finance.view"
+          message="You do not have authorization to view financial audit transactions."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Financial Transactions Audit Trail"
         subtitle="Immutable audit log of all fund balance movements, credits, and debits"
+        userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
       />
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">

@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.modules.settings.schemas import SettingResponse, SettingUpdate
 from app.modules.settings.service import SettingsService
-from app.modules.users.router import require_roles
-from app.modules.users.models import User, UserRole
+from app.modules.users.router import require_permission
+from app.modules.users.models import User
 
 router = APIRouter(prefix="/settings", tags=["Settings"])
 
@@ -20,7 +20,7 @@ async def get_public_settings(db: AsyncSession = Depends(get_db)):
 @router.get("", response_model=List[SettingResponse])
 async def list_settings(
     category: Optional[str] = Query(None),
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN)),
+    current_user: User = Depends(require_permission("settings.view")),
     db: AsyncSession = Depends(get_db)
 ):
     service = SettingsService(db)
@@ -32,7 +32,7 @@ async def list_settings(
 async def update_setting(
     key: str,
     setting_in: SettingUpdate,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN)),
+    current_user: User = Depends(require_permission("settings.edit")),
     db: AsyncSession = Depends(get_db)
 ):
     service = SettingsService(db)

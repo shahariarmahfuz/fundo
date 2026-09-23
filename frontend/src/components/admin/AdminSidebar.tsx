@@ -22,42 +22,50 @@ import {
   X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ApiClient } from '@/lib/api';
 import { useAdminNav } from '@/context/AdminNavContext';
+import { useAuth } from '@/context/AuthContext';
 
-const navItems = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: any;
+  permission?: string;
+}
+
+const allNavItems: NavItem[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/members', label: 'Members', icon: Users },
-  { href: '/admin/beneficiaries', label: 'Beneficiaries', icon: HeartHandshake },
-  { href: '/admin/groups', label: 'Groups', icon: Network },
-  { href: '/admin/contributions', label: 'Contributions', icon: PiggyBank },
-  { href: '/admin/loans', label: 'Loans', icon: Coins },
-  { href: '/admin/donations', label: 'Sadaqa / Donations', icon: HandHeart },
-  { href: '/admin/funds', label: 'Funds', icon: Landmark },
-  { href: '/admin/transactions', label: 'Transactions', icon: ArrowLeftRight },
-  { href: '/admin/ledgers', label: 'Ledgers', icon: BookOpen },
-  { href: '/admin/reports', label: 'Reports', icon: BarChart3 },
-  { href: '/admin/users', label: 'Users', icon: UserCog },
-  { href: '/admin/settings', label: 'Settings', icon: Settings },
+  { href: '/admin/members', label: 'Members', icon: Users, permission: 'members.view' },
+  { href: '/admin/beneficiaries', label: 'Beneficiaries', icon: HeartHandshake, permission: 'beneficiaries.view' },
+  { href: '/admin/groups', label: 'Groups', icon: Network, permission: 'groups.view' },
+  { href: '/admin/contributions', label: 'Contributions', icon: PiggyBank, permission: 'contributions.view' },
+  { href: '/admin/loans', label: 'Loans', icon: Coins, permission: 'loans.view' },
+  { href: '/admin/donations', label: 'Sadaqa / Donations', icon: HandHeart, permission: 'donations.view' },
+  { href: '/admin/funds', label: 'Funds', icon: Landmark, permission: 'finance.view' },
+  { href: '/admin/transactions', label: 'Transactions', icon: ArrowLeftRight, permission: 'finance.view' },
+  { href: '/admin/ledgers', label: 'Ledgers', icon: BookOpen, permission: 'finance.view' },
+  { href: '/admin/reports', label: 'Reports', icon: BarChart3, permission: 'reports.view' },
+  { href: '/admin/users', label: 'Users & Roles', icon: UserCog, permission: 'users.view' },
+  { href: '/admin/settings', label: 'Settings', icon: Settings, permission: 'settings.view' },
 ];
 
 export function AdminSidebar() {
   const pathname = usePathname();
   const { isOpen, closeSidebar } = useAdminNav();
+  const { user, hasPermission, isSuperAdmin, logout } = useAuth();
 
   if (pathname === '/login' || pathname === '/admin/login') {
     return null;
   }
 
+  // Filter navigation items by granular permission
+  const visibleNavItems = allNavItems.filter((item) => {
+    if (!item.permission) return true;
+    return isSuperAdmin || hasPermission(item.permission);
+  });
+
   const handleLogout = async () => {
-    try {
-      await ApiClient.post('/auth/logout');
-    } catch (e) {
-      console.error('Logout error:', e);
-    }
-    ApiClient.setToken(null);
     closeSidebar();
-    window.location.href = '/login';
+    await logout();
   };
 
   return (
@@ -111,7 +119,7 @@ export function AdminSidebar() {
           <div className="px-3 pb-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
             Foundation Modules
           </div>
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
             return (
@@ -136,8 +144,14 @@ export function AdminSidebar() {
           })}
         </nav>
 
-        {/* Footer / Shortcut */}
+        {/* User Info & Footer */}
         <div className="p-3 border-t border-slate-200 space-y-1 shrink-0">
+          {user && (
+            <div className="px-3 py-2 bg-slate-50 rounded-md border border-slate-100 mb-2">
+              <div className="text-xs font-semibold text-slate-900 truncate">{user.full_name}</div>
+              <div className="text-[10px] text-teal-700 capitalize font-medium">{user.role?.replace('_', ' ')}</div>
+            </div>
+          )}
           <Link
             href="/"
             target="_blank"

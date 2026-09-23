@@ -7,13 +7,20 @@ import { Badge } from '@/components/ui/Badge';
 import { ApiClient } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import { BarChart3, TrendingUp, Landmark, ShieldCheck } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { AccessDenied } from '@/components/admin/PermissionGuard';
 
 export default function AdminReportsPage() {
+  const { hasPermission, loading: authLoading, user } = useAuth();
   const [report, setReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
+      if (!hasPermission('reports.view') && !hasPermission('finance.view')) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         const data = await ApiClient.get<any>('/reports/financial');
@@ -24,14 +31,33 @@ export default function AdminReportsPage() {
         setLoading(false);
       }
     };
-    loadData();
-  }, []);
+    if (!authLoading) {
+      loadData();
+    }
+  }, [authLoading, hasPermission]);
+
+  if (!authLoading && !hasPermission('reports.view') && !hasPermission('finance.view')) {
+    return (
+      <div className="flex-1 flex flex-col min-w-0 w-full">
+        <AdminHeader
+          title="Financial Statements & Portfolio Reports"
+          subtitle="Balance sheet reconciliation and portfolio reports"
+          userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
+        />
+        <AccessDenied
+          permission="reports.view"
+          message="You do not have authorization to view financial statements and reports."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Financial Statements & Portfolio Reports"
         subtitle="Balance sheet reconciliation, monthly capital flow trends, and assets/liabilities position"
+        userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
       />
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto w-full min-w-0">

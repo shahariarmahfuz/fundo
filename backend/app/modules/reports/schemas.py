@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 
 
@@ -10,18 +10,17 @@ class FundMetric(BaseModel):
 
 
 class DashboardSummaryResponse(BaseModel):
-    total_members: int
-    active_members: int
-    total_beneficiaries: int
-    total_groups: int
-    total_funds_balance: float
-    total_donations: float
-    total_contributions: float
-    total_loans_disbursed: float
-    active_loans_count: int
-    total_loans_outstanding: float
-    fund_distribution: List[FundMetric]
-    recent_transactions: List[Dict[str, Any]]
+    total_members: Optional[int] = None
+    active_members: Optional[int] = None
+    total_beneficiaries: Optional[int] = None
+    total_groups: Optional[int] = None
+    total_funds_balance: Optional[float] = None
+    total_donations: Optional[float] = None
+    total_contributions: Optional[float] = None
+    total_loans_disbursed: Optional[float] = None
+    active_loans_count: Optional[int] = None
+    total_loans_outstanding: Optional[float] = None
+    fund_distribution: Optional[List[FundMetric]] = None
 
 
 class FinancialReportResponse(BaseModel):

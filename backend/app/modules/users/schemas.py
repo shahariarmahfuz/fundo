@@ -1,7 +1,45 @@
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, EmailStr, Field
+
+
+class PermissionResponse(BaseModel):
+    id: uuid.UUID
+    code: str
+    module: str
+    action: str
+    description: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class RoleBase(BaseModel):
+    name: str
+    display_name: str
+    description: Optional[str] = None
+    is_system: bool = False
+
+
+class RoleCreate(RoleBase):
+    permission_codes: List[str] = []
+
+
+class RoleUpdate(BaseModel):
+    display_name: Optional[str] = None
+    description: Optional[str] = None
+    permission_codes: Optional[List[str]] = None
+
+
+class RoleResponse(RoleBase):
+    id: uuid.UUID
+    permissions: List[PermissionResponse] = []
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 class UserBase(BaseModel):
@@ -14,6 +52,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=6)
+    role_ids: Optional[List[uuid.UUID]] = None
 
 
 class UserUpdate(BaseModel):
@@ -23,6 +62,7 @@ class UserUpdate(BaseModel):
     phone: Optional[str] = None
     is_active: Optional[bool] = None
     password: Optional[str] = Field(None, min_length=6)
+    role_ids: Optional[List[uuid.UUID]] = None
 
 
 class UserResponse(BaseModel):
@@ -32,6 +72,9 @@ class UserResponse(BaseModel):
     role: str
     phone: Optional[str] = None
     is_active: bool
+    roles: List[str] = []
+    permissions: List[str] = []
+    is_superadmin: bool = False
     created_at: datetime
     updated_at: datetime
 

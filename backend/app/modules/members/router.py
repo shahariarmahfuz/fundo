@@ -7,8 +7,9 @@ from app.core.database import get_db
 from app.core.pagination import PaginatedResponse
 from app.modules.members.schemas import MemberCreate, MemberUpdate, MemberResponse
 from app.modules.members.service import MemberService
-from app.modules.users.router import require_roles
-from app.modules.users.models import User, UserRole
+from app.modules.users.router import require_permission
+from app.modules.users.models import User
+from app.core.exceptions import NotFoundException
 
 router = APIRouter(prefix="/members", tags=["Members"])
 
@@ -40,7 +41,7 @@ async def list_members(
     search: Optional[str] = Query(None),
     group_id: Optional[uuid.UUID] = Query(None),
     status: Optional[str] = Query(None),
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF, UserRole.VIEWER)),
+    current_user: User = Depends(require_permission("members.view")),
     db: AsyncSession = Depends(get_db)
 ):
     service = MemberService(db)
@@ -66,7 +67,7 @@ async def list_members(
 @router.post("", response_model=MemberResponse, status_code=status.HTTP_201_CREATED)
 async def create_member(
     member_in: MemberCreate,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF)),
+    current_user: User = Depends(require_permission("members.create")),
     db: AsyncSession = Depends(get_db)
 ):
     service = MemberService(db)
@@ -77,13 +78,12 @@ async def create_member(
 @router.get("/{member_id}", response_model=MemberResponse)
 async def get_member(
     member_id: uuid.UUID,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF, UserRole.VIEWER)),
+    current_user: User = Depends(require_permission("members.view")),
     db: AsyncSession = Depends(get_db)
 ):
     service = MemberService(db)
     member = await service.get_by_id(member_id)
     if not member:
-        from app.core.exceptions import NotFoundException
         raise NotFoundException("Member", member_id)
     return _to_response(member)
 
@@ -92,9 +92,24 @@ async def get_member(
 async def update_member(
     member_id: uuid.UUID,
     member_in: MemberUpdate,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF)),
+    current_user: User = Depends(require_permission("members.edit")),
     db: AsyncSession = Depends(get_db)
 ):
     service = MemberService(db)
     member = await service.update(member_id, member_in)
     return _to_response(member)
+
+
+@router.delete("/{member_id}")
+async def delete_member(
+    member_id: uuid.UUID,
+    current_user: User = Depends(require_permission("members.delete")),
+    db: AsyncSession = Depends(get_db)
+):
+    service = MemberService(db)
+    member = await service.get_by_id(member_id)
+    if not member:
+        raise NotFoundException("Member", member_id)
+    await service.db.delete(member)
+    await service.db.commit()
+    return {"success": True, "detail": "Member deleted successfully"}

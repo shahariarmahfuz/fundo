@@ -12,8 +12,9 @@ from app.modules.loans.schemas import (
     LoanRepaymentResponse
 )
 from app.modules.loans.service import LoanService
-from app.modules.users.router import require_roles
-from app.modules.users.models import User, UserRole
+from app.modules.users.router import require_permission
+from app.modules.users.models import User
+from app.core.exceptions import NotFoundException
 
 router = APIRouter(prefix="/loans", tags=["Loans"])
 
@@ -51,7 +52,7 @@ async def list_loans(
     member_id: Optional[uuid.UUID] = Query(None),
     status: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF, UserRole.VIEWER)),
+    current_user: User = Depends(require_permission("loans.view")),
     db: AsyncSession = Depends(get_db)
 ):
     service = LoanService(db)
@@ -77,7 +78,7 @@ async def list_loans(
 @router.post("", response_model=LoanResponse, status_code=status.HTTP_201_CREATED)
 async def create_loan(
     loan_in: LoanCreate,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF)),
+    current_user: User = Depends(require_permission("loans.create")),
     db: AsyncSession = Depends(get_db)
 ):
     service = LoanService(db)
@@ -88,13 +89,12 @@ async def create_loan(
 @router.get("/{loan_id}", response_model=LoanResponse)
 async def get_loan(
     loan_id: uuid.UUID,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF, UserRole.VIEWER)),
+    current_user: User = Depends(require_permission("loans.view")),
     db: AsyncSession = Depends(get_db)
 ):
     service = LoanService(db)
     loan = await service.get_by_id(loan_id)
     if not loan:
-        from app.core.exceptions import NotFoundException
         raise NotFoundException("Loan", loan_id)
     return _to_loan_response(loan)
 
@@ -102,7 +102,7 @@ async def get_loan(
 @router.post("/repayments", response_model=LoanRepaymentResponse, status_code=status.HTTP_201_CREATED)
 async def record_loan_repayment(
     rep_in: LoanRepaymentCreate,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF)),
+    current_user: User = Depends(require_permission("loans.create")),
     db: AsyncSession = Depends(get_db)
 ):
     service = LoanService(db)

@@ -18,7 +18,11 @@ from app.modules.users.schemas import (
     UserCreate,
     UserUpdate,
     LoginRequest,
-    TokenResponse
+    TokenResponse,
+    RoleResponse,
+    RoleCreate,
+    RoleUpdate,
+    PermissionResponse
 )
 from app.modules.users.service import UserService
 from app.core.config import settings
@@ -32,10 +36,8 @@ async def get_current_user(
     cookie_token: Optional[str] = Cookie(None, alias="fundo_access_token"),
     db: AsyncSession = Depends(get_db)
 ) -> User:
-    # Accept token from Authorization header or HttpOnly cookie
     auth_token = token or cookie_token
     if not auth_token:
-        # Also check request.cookies directly in case alias parsing varies
         auth_token = request.cookies.get("fundo_access_token")
 
     if not auth_token:
@@ -60,10 +62,47 @@ async def get_current_user(
 
 def require_roles(*allowed_roles: str):
     def role_checker(current_user: User = Depends(get_current_user)) -> User:
-        if current_user.role not in allowed_roles and current_user.role != UserRole.SUPERADMIN:
+        if current_user.is_superadmin:
+            return current_user
+        if current_user.role not in allowed_roles:
             raise ForbiddenException("Insufficient permissions for this operation")
         return current_user
     return role_checker
+
+
+def require_permission(permission_code: str):
+    async def permission_checker(
+        current_user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db)
+    ) -> User:
+        if current_user.is_superadmin:
+            return current_user
+
+        user_service = UserService(db)
+        perms = await user_service.get_user_permissions(current_user.id)
+        if permission_code not in perms:
+            raise ForbiddenException(f"Forbidden: You do not have the required permission '{permission_code}'.")
+        return current_user
+    return permission_checker
+
+
+async def build_user_response(user: User, db: AsyncSession) -> UserResponse:
+    user_service = UserService(db)
+    perms = await user_service.get_user_permissions(user.id)
+    roles = await user_service.get_user_roles(user.id)
+    return UserResponse(
+        id=user.id,
+        email=user.email,
+        full_name=user.full_name,
+        role=user.role,
+        phone=user.phone,
+        is_active=user.is_active,
+        roles=roles,
+        permissions=perms,
+        is_superadmin=user.is_superadmin,
+        created_at=user.created_at,
+        updated_at=user.updated_at
+    )
 
 
 @router.post("/auth/login", response_model=TokenResponse)
@@ -95,10 +134,11 @@ async def login(
         path="/"
     )
 
+    user_resp = await build_user_response(user, db)
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
-        user=UserResponse.model_validate(user)
+        user=user_resp
     )
 
 
@@ -114,24 +154,31 @@ async def logout(response: Response):
 
 
 @router.get("/auth/me", response_model=UserResponse)
-async def get_me(current_user: User = Depends(get_current_user)):
-    return current_user
+async def get_me(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    return await build_user_response(current_user, db)
 
+
+# ================= User Management =================
 
 @router.get("/users", response_model=PaginatedResponse[UserResponse])
 async def list_users(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     search: Optional[str] = Query(None),
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN)),
+    current_user: User = Depends(require_permission("users.view")),
     db: AsyncSession = Depends(get_db)
 ):
     service = UserService(db)
     skip = (page - 1) * page_size
     items, total = await service.list_users(skip=skip, limit=page_size, search=search)
     total_pages = (total + page_size - 1) // page_size if total > 0 else 1
+    
+    user_responses = [await build_user_response(u, db) for u in items]
     return PaginatedResponse(
-        items=[UserResponse.model_validate(u) for u in items],
+        items=user_responses,
         total=total,
         page=page,
         page_size=page_size,
@@ -142,20 +189,73 @@ async def list_users(
 @router.post("/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(
     user_in: UserCreate,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN)),
+    current_user: User = Depends(require_permission("users.create")),
     db: AsyncSession = Depends(get_db)
 ):
     service = UserService(db)
     user = await service.create(user_in)
-    return user
+    return await build_user_response(user, db)
 
 
 @router.put("/users/{user_id}", response_model=UserResponse)
 async def update_user(
     user_id: uuid.UUID,
     user_in: UserUpdate,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN)),
+    current_user: User = Depends(require_permission("users.edit")),
     db: AsyncSession = Depends(get_db)
 ):
     service = UserService(db)
-    return await service.update(user_id, user_in)
+    user = await service.update(user_id, user_in)
+    return await build_user_response(user, db)
+
+
+# ================= Role & Permission Management =================
+
+@router.get("/permissions", response_model=List[PermissionResponse])
+async def list_permissions(
+    current_user: User = Depends(require_permission("roles.view")),
+    db: AsyncSession = Depends(get_db)
+):
+    service = UserService(db)
+    return await service.list_permissions()
+
+
+@router.get("/roles", response_model=List[RoleResponse])
+async def list_roles(
+    current_user: User = Depends(require_permission("roles.view")),
+    db: AsyncSession = Depends(get_db)
+):
+    service = UserService(db)
+    return await service.list_roles()
+
+
+@router.post("/roles", response_model=RoleResponse, status_code=status.HTTP_201_CREATED)
+async def create_role(
+    role_in: RoleCreate,
+    current_user: User = Depends(require_permission("roles.create")),
+    db: AsyncSession = Depends(get_db)
+):
+    service = UserService(db)
+    return await service.create_role(role_in)
+
+
+@router.put("/roles/{role_id}", response_model=RoleResponse)
+async def update_role(
+    role_id: uuid.UUID,
+    role_in: RoleUpdate,
+    current_user: User = Depends(require_permission("roles.edit")),
+    db: AsyncSession = Depends(get_db)
+):
+    service = UserService(db)
+    return await service.update_role(role_id, role_in)
+
+
+@router.delete("/roles/{role_id}")
+async def delete_role(
+    role_id: uuid.UUID,
+    current_user: User = Depends(require_permission("roles.delete")),
+    db: AsyncSession = Depends(get_db)
+):
+    service = UserService(db)
+    await service.delete_role(role_id)
+    return {"success": True, "detail": "Role deleted successfully"}

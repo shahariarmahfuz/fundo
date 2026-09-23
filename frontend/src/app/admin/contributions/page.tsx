@@ -11,8 +11,11 @@ import { Contribution, Member, Fund } from '@/types/admin';
 import { PaginatedResponse } from '@/types/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { PiggyBank, Plus, Search, AlertCircle, X, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { AccessDenied } from '@/components/admin/PermissionGuard';
 
 export default function AdminContributionsPage() {
+  const { hasPermission, loading: authLoading, user } = useAuth();
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [funds, setFunds] = useState<Fund[]>([]);
@@ -31,21 +34,33 @@ export default function AdminContributionsPage() {
   });
 
   const loadData = async () => {
+    if (!hasPermission('contributions.view')) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
-      const [resC, resM, resF] = await Promise.all([
-        ApiClient.get<PaginatedResponse<Contribution>>('/contributions?page=1&page_size=50'),
-        ApiClient.get<PaginatedResponse<Member>>('/members?page=1&page_size=100'),
-        ApiClient.get<Fund[]>('/finance/funds?active_only=true')
-      ]);
+      const resC = await ApiClient.get<PaginatedResponse<Contribution>>('/contributions?page=1&page_size=50');
       setContributions(resC.items);
-      setMembers(resM.items);
-      setFunds(resF);
-      if (resM.items.length > 0 && !form.member_id) {
-        setForm(f => ({ ...f, member_id: resM.items[0].id }));
+
+      if (hasPermission('members.view')) {
+        try {
+          const resM = await ApiClient.get<PaginatedResponse<Member>>('/members?page=1&page_size=100');
+          setMembers(resM.items);
+          if (resM.items.length > 0 && !form.member_id) {
+            setForm(f => ({ ...f, member_id: resM.items[0].id }));
+          }
+        } catch {}
       }
-      if (resF.length > 0 && !form.fund_id) {
-        setForm(f => ({ ...f, fund_id: resF[0].id }));
+
+      if (hasPermission('finance.view')) {
+        try {
+          const resF = await ApiClient.get<Fund[]>('/finance/funds?active_only=true');
+          setFunds(resF);
+          if (resF.length > 0 && !form.fund_id) {
+            setForm(f => ({ ...f, fund_id: resF[0].id }));
+          }
+        } catch {}
       }
     } catch (err) {
       console.error('Failed to load contributions data:', err);
@@ -55,8 +70,12 @@ export default function AdminContributionsPage() {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!authLoading && hasPermission('contributions.view')) {
+      loadData();
+    } else if (!authLoading) {
+      setLoading(false);
+    }
+  }, [authLoading, hasPermission]);
 
   const handleRecord = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,11 +100,28 @@ export default function AdminContributionsPage() {
     }
   };
 
+  if (!authLoading && !hasPermission('contributions.view')) {
+    return (
+      <div className="flex-1 flex flex-col min-w-0 w-full">
+        <AdminHeader
+          title="Member Savings & Contributions"
+          subtitle="Mutual savings deposits and equity shares"
+          userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
+        />
+        <AccessDenied
+          permission="contributions.view"
+          message="You do not have authorization to view the contributions module."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Member Savings & Contributions"
         subtitle="Manage regular member dues, mutual savings deposits, and equity shares"
+        userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
       />
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
@@ -94,14 +130,16 @@ export default function AdminContributionsPage() {
             PostgreSQL ACID Double-Entry Transaction Ledger Enforced
           </div>
 
-          <Button
-            onClick={() => setShowModal(true)}
-            size="sm"
-            className="gap-1.5 shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Record Contribution</span>
-          </Button>
+          {hasPermission('contributions.create') && (
+            <Button
+              onClick={() => setShowModal(true)}
+              size="sm"
+              className="gap-1.5 shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Record Contribution</span>
+            </Button>
+          )}
         </div>
 
         <Card className="min-w-0 w-full overflow-hidden">

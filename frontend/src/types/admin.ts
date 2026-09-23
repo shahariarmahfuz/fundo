@@ -1,29 +1,20 @@
 export interface DashboardSummary {
-  total_members: number;
-  active_members: number;
-  total_beneficiaries: number;
-  total_groups: number;
-  total_funds_balance: number;
-  total_donations: number;
-  total_contributions: number;
-  total_loans_disbursed: number;
-  active_loans_count: number;
-  total_loans_outstanding: number;
-  fund_distribution: {
+  total_members?: number | null;
+  active_members?: number | null;
+  total_beneficiaries?: number | null;
+  total_groups?: number | null;
+  total_funds_balance?: number | null;
+  total_donations?: number | null;
+  total_contributions?: number | null;
+  total_loans_disbursed?: number | null;
+  active_loans_count?: number | null;
+  total_loans_outstanding?: number | null;
+  fund_distribution?: {
     name: string;
     code: string;
     balance: number;
     fund_type: string;
-  }[];
-  recent_transactions: {
-    id: string;
-    transaction_number: string;
-    transaction_type: 'credit' | 'debit';
-    category: string;
-    amount: number;
-    description: string;
-    date: string;
-  }[];
+  }[] | null;
 }
 
 export interface Member {

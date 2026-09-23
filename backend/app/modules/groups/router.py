@@ -7,8 +7,9 @@ from app.core.database import get_db
 from app.core.pagination import PaginatedResponse
 from app.modules.groups.schemas import GroupCreate, GroupUpdate, GroupResponse
 from app.modules.groups.service import GroupService
-from app.modules.users.router import require_roles
-from app.modules.users.models import User, UserRole
+from app.modules.users.router import require_permission
+from app.modules.users.models import User
+from app.core.exceptions import NotFoundException
 
 router = APIRouter(prefix="/groups", tags=["Groups"])
 
@@ -18,7 +19,7 @@ async def list_groups(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     search: Optional[str] = Query(None),
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF, UserRole.VIEWER)),
+    current_user: User = Depends(require_permission("groups.view")),
     db: AsyncSession = Depends(get_db)
 ):
     service = GroupService(db)
@@ -54,7 +55,7 @@ async def list_groups(
 @router.post("", response_model=GroupResponse, status_code=status.HTTP_201_CREATED)
 async def create_group(
     group_in: GroupCreate,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF)),
+    current_user: User = Depends(require_permission("groups.create")),
     db: AsyncSession = Depends(get_db)
 ):
     service = GroupService(db)
@@ -76,13 +77,12 @@ async def create_group(
 @router.get("/{group_id}", response_model=GroupResponse)
 async def get_group(
     group_id: uuid.UUID,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF, UserRole.VIEWER)),
+    current_user: User = Depends(require_permission("groups.view")),
     db: AsyncSession = Depends(get_db)
 ):
     service = GroupService(db)
     group = await service.get_by_id(group_id)
     if not group:
-        from app.core.exceptions import NotFoundException
         raise NotFoundException("Group", group_id)
     return GroupResponse(
         id=group.id,
@@ -102,7 +102,7 @@ async def get_group(
 async def update_group(
     group_id: uuid.UUID,
     group_in: GroupUpdate,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.STAFF)),
+    current_user: User = Depends(require_permission("groups.edit")),
     db: AsyncSession = Depends(get_db)
 ):
     service = GroupService(db)
@@ -119,3 +119,18 @@ async def update_group(
         created_at=group.created_at,
         updated_at=group.updated_at
     )
+
+
+@router.delete("/{group_id}")
+async def delete_group(
+    group_id: uuid.UUID,
+    current_user: User = Depends(require_permission("groups.delete")),
+    db: AsyncSession = Depends(get_db)
+):
+    service = GroupService(db)
+    group = await service.get_by_id(group_id)
+    if not group:
+        raise NotFoundException("Group", group_id)
+    await service.db.delete(group)
+    await service.db.commit()
+    return {"success": True, "detail": "Group deleted successfully"}

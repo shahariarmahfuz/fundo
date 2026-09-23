@@ -11,8 +11,11 @@ import { Donation, Fund } from '@/types/admin';
 import { PaginatedResponse } from '@/types/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { HandHeart, Plus, Search, AlertCircle, X } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { AccessDenied } from '@/components/admin/PermissionGuard';
 
 export default function AdminDonationsPage() {
+  const { hasPermission, loading: authLoading, user } = useAuth();
   const [donations, setDonations] = useState<Donation[]>([]);
   const [funds, setFunds] = useState<Fund[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,17 +36,26 @@ export default function AdminDonationsPage() {
   });
 
   const loadData = async () => {
+    if (!hasPermission('donations.view')) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
-      const [resD, resF] = await Promise.all([
-        ApiClient.get<PaginatedResponse<Donation>>('/finance/donations?page=1&page_size=50'),
-        ApiClient.get<Fund[]>('/finance/funds?active_only=true')
-      ]);
+      const resD = await ApiClient.get<PaginatedResponse<Donation>>('/finance/donations?page=1&page_size=50');
       setDonations(resD.items);
-      setFunds(resF);
-      const zakatFund = resF.find(f => f.fund_type === 'sadaqa_zakat') || resF[0];
-      if (zakatFund && !form.fund_id) {
-        setForm(f => ({ ...f, fund_id: zakatFund.id }));
+
+      if (hasPermission('finance.view')) {
+        try {
+          const resF = await ApiClient.get<Fund[]>('/finance/funds?active_only=true');
+          setFunds(resF);
+          const zakatFund = resF.find(f => f.fund_type === 'sadaqa_zakat') || resF[0];
+          if (zakatFund && !form.fund_id) {
+            setForm(f => ({ ...f, fund_id: zakatFund.id }));
+          }
+        } catch {
+          // Ignore funds lookup if unpermitted
+        }
       }
     } catch (err) {
       console.error('Failed to load donations:', err);
@@ -53,8 +65,12 @@ export default function AdminDonationsPage() {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!authLoading && hasPermission('donations.view')) {
+      loadData();
+    } else if (!authLoading) {
+      setLoading(false);
+    }
+  }, [authLoading, hasPermission]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,11 +98,28 @@ export default function AdminDonationsPage() {
     }
   };
 
+  if (!authLoading && !hasPermission('donations.view')) {
+    return (
+      <div className="flex-1 flex flex-col min-w-0 w-full">
+        <AdminHeader
+          title="Sadaqa & Zakat Charitable Inflows"
+          subtitle="Designated humanitarian gifts and charitable relief pools"
+          userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
+        />
+        <AccessDenied
+          permission="donations.view"
+          message="You do not have authorization to view the donations module."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
       <AdminHeader
         title="Sadaqa & Zakat Charitable Inflows"
         subtitle="Manage designated humanitarian gifts, public endowments, and zero-overhead relief pools"
+        userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
       />
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
@@ -95,14 +128,16 @@ export default function AdminDonationsPage() {
             100% Policy-Restricted Segregation Guaranteed
           </div>
 
-          <Button
-            onClick={() => setShowModal(true)}
-            size="sm"
-            className="gap-1.5 shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Record Sadaqa / Donation</span>
-          </Button>
+          {hasPermission('donations.create') && (
+            <Button
+              onClick={() => setShowModal(true)}
+              size="sm"
+              className="gap-1.5 shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Record Sadaqa / Donation</span>
+            </Button>
+          )}
         </div>
 
         <Card className="min-w-0 w-full overflow-hidden">

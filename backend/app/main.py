@@ -103,6 +103,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 # Health Check
 @app.get("/health", tags=["System"])
+@app.get(f"{settings.API_V1_PREFIX}/health", tags=["System"])
 async def health_check():
     return {
         "status": "healthy",

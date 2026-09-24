@@ -4,7 +4,13 @@ const getBaseUrl = () => {
   if (typeof window !== 'undefined') {
     return '/api/v1';
   }
-  return process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+  return (
+    process.env.INTERNAL_API_URL ||
+    process.env.BACKEND_URL ||
+    (process.env.NEXT_PUBLIC_API_URL?.startsWith('http')
+      ? process.env.NEXT_PUBLIC_API_URL
+      : 'http://127.0.0.1:8000/api/v1')
+  );
 };
 
 const BASE_URL = getBaseUrl();
@@ -18,8 +24,10 @@ export class ApiClient {
     if (typeof window !== 'undefined') {
       if (token) {
         sessionStorage.setItem('fundo_auth_token', token);
+        document.cookie = `fundo_access_token=${token}; path=/; max-age=86400; SameSite=Lax`;
       } else {
         sessionStorage.removeItem('fundo_auth_token');
+        document.cookie = 'fundo_access_token=; path=/; max-age=0; SameSite=Lax';
       }
     }
   }
@@ -31,6 +39,11 @@ export class ApiClient {
       if (stored) {
         this.token = stored;
         return stored;
+      }
+      const match = document.cookie.match(/(?:^|;\s*)fundo_access_token=([^;]+)/);
+      if (match) {
+        this.token = match[1];
+        return match[1];
       }
     }
     return null;
@@ -136,6 +149,14 @@ export class ApiClient {
     return this.fetch<T>(endpoint, {
       ...options,
       method: 'PUT',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  }
+
+  static patch<T>(endpoint: string, body?: any, options?: RequestInit): Promise<T> {
+    return this.fetch<T>(endpoint, {
+      ...options,
+      method: 'PATCH',
       body: body ? JSON.stringify(body) : undefined,
     });
   }

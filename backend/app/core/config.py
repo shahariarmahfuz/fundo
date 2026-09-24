@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Optional
 import json
 from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -28,7 +28,29 @@ class Settings(BaseSettings):
     CACHE_DEFAULT_TTL: int = 300  # 5 minutes
 
     # CORS
+    FRONTEND_URL: Optional[str] = None
     CORS_ORIGINS: Union[List[str], str] = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8000"]
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def assemble_database_url(cls, v: str) -> str:
+        if not v:
+            return v
+        url = v.strip()
+        if url.startswith("postgres://"):
+            url = "postgresql+asyncpg://" + url[len("postgres://"):]
+        elif url.startswith("postgresql://"):
+            url = "postgresql+asyncpg://" + url[len("postgresql://"):]
+        url = url.replace("sslmode=", "ssl=")
+        # Remove channel_binding parameter as asyncpg doesn't accept it
+        from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+        parsed = urlparse(url)
+        query_params = parse_qs(parsed.query)
+        if "channel_binding" in query_params:
+            query_params.pop("channel_binding")
+            new_query = urlencode({k: v[0] for k, v in query_params.items()})
+            url = urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, new_query, parsed.fragment))
+        return url
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
@@ -48,6 +70,15 @@ class Settings(BaseSettings):
         case_sensitive=True,
         extra="ignore"
     )
+
+    def model_post_init(self, __context) -> None:
+        if self.FRONTEND_URL:
+            clean_url = self.FRONTEND_URL.strip().rstrip("/")
+            if isinstance(self.CORS_ORIGINS, list):
+                if clean_url not in self.CORS_ORIGINS:
+                    self.CORS_ORIGINS.append(clean_url)
+            elif isinstance(self.CORS_ORIGINS, str) and self.CORS_ORIGINS != "*":
+                self.CORS_ORIGINS = [self.CORS_ORIGINS, clean_url]
 
 
 settings = Settings()

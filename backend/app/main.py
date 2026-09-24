@@ -18,9 +18,15 @@ from app.modules.beneficiaries.router import router as beneficiaries_router
 from app.modules.groups.router import router as groups_router
 from app.modules.contributions.router import router as contributions_router
 from app.modules.loans.router import router as loans_router
+from app.modules.qard_hasanah.router import router as qard_hasanah_router
+from app.modules.sadaqa.router import router as sadaqa_router
 from app.modules.finance.router import router as finance_router
 from app.modules.reports.router import router as reports_router
 from app.modules.settings.router import router as settings_router
+from app.modules.member_applications.router import (
+    admin_router as member_applications_router,
+    public_router as public_member_applications_router
+)
 
 setup_logging()
 logger = logging.getLogger("fundo.main")
@@ -115,6 +121,10 @@ app.include_router(beneficiaries_router, prefix=v1_prefix)
 app.include_router(groups_router, prefix=v1_prefix)
 app.include_router(contributions_router, prefix=v1_prefix)
 app.include_router(loans_router, prefix=v1_prefix)
+app.include_router(qard_hasanah_router, prefix=v1_prefix)
+app.include_router(sadaqa_router, prefix=v1_prefix)
 app.include_router(finance_router, prefix=v1_prefix)
 app.include_router(reports_router, prefix=v1_prefix)
 app.include_router(settings_router, prefix=v1_prefix)
+app.include_router(public_member_applications_router, prefix=v1_prefix)
+app.include_router(member_applications_router, prefix=v1_prefix)

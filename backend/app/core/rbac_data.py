@@ -7,6 +7,13 @@ SYSTEM_PERMISSIONS: List[Dict[str, str]] = [
     {"code": "members.edit", "module": "members", "action": "edit", "description": "Update community member information"},
     {"code": "members.delete", "module": "members", "action": "delete", "description": "Remove community member records"},
 
+    # Member Applications
+    {"code": "member_applications.view", "module": "member_applications", "action": "view", "description": "View public member applications and review queue"},
+    {"code": "member_applications.review", "module": "member_applications", "action": "review", "description": "Review and add notes to member applications"},
+    {"code": "member_applications.approve", "module": "member_applications", "action": "approve", "description": "Approve member applications and enroll members"},
+    {"code": "member_applications.reject", "module": "member_applications", "action": "reject", "description": "Reject member applications"},
+    {"code": "member_applications.delete", "module": "member_applications", "action": "delete", "description": "Delete member application records"},
+
     # Beneficiaries
     {"code": "beneficiaries.view", "module": "beneficiaries", "action": "view", "description": "View charitable beneficiary registry"},
     {"code": "beneficiaries.create", "module": "beneficiaries", "action": "create", "description": "Register new aid beneficiaries"},
@@ -31,17 +38,32 @@ SYSTEM_PERMISSIONS: List[Dict[str, str]] = [
     {"code": "loans.edit", "module": "loans", "action": "edit", "description": "Adjust loan repayment terms and schedules"},
     {"code": "loans.delete", "module": "loans", "action": "delete", "description": "Cancel loan applications or records"},
 
+    # Qard Hasanah (Interest-Free Loans)
+    {"code": "qard_hasanah.view", "module": "qard_hasanah", "action": "view", "description": "View interest-free Qard Hasanah loan portfolio and repayment records"},
+    {"code": "qard_hasanah.create", "module": "qard_hasanah", "action": "create", "description": "Issue interest-free Qard Hasanah loans"},
+    {"code": "qard_hasanah.edit", "module": "qard_hasanah", "action": "edit", "description": "Update Qard Hasanah terms and status"},
+    {"code": "qard_hasanah.delete", "module": "qard_hasanah", "action": "delete", "description": "Cancel or delete Qard Hasanah records"},
+    {"code": "qard_hasanah.repayment", "module": "qard_hasanah", "action": "repayment", "description": "Record interest-free principal repayments"},
+    {"code": "qard_hasanah.reports", "module": "qard_hasanah", "action": "reports", "description": "Access Qard Hasanah portfolio reports and analytics"},
+
     # Finance
     {"code": "finance.view", "module": "finance", "action": "view", "description": "View foundation funds, balances, and double-entry ledgers"},
     {"code": "finance.create", "module": "finance", "action": "create", "description": "Establish new capital funds and record financial entries"},
     {"code": "finance.edit", "module": "finance", "action": "edit", "description": "Modify fund configurations"},
     {"code": "finance.delete", "module": "finance", "action": "delete", "description": "Close or archive funds"},
 
-    # Donations (Sadaqa & Zakat)
+    # Donations & Sadaqa
     {"code": "donations.view", "module": "donations", "action": "view", "description": "View charitable donations and Sadaqa/Zakat inflows"},
     {"code": "donations.create", "module": "donations", "action": "create", "description": "Record donor gifts and charity receipts"},
     {"code": "donations.edit", "module": "donations", "action": "edit", "description": "Modify donation records"},
     {"code": "donations.delete", "module": "donations", "action": "delete", "description": "Void donation entries"},
+
+    # Sadaqa (Dedicated Module)
+    {"code": "sadaqa.view", "module": "sadaqa", "action": "view", "description": "View Sadaqa donations, donor registries, and receipts"},
+    {"code": "sadaqa.create", "module": "sadaqa", "action": "create", "description": "Record new permanent Sadaqa donations with financial settlement"},
+    {"code": "sadaqa.edit", "module": "sadaqa", "action": "edit", "description": "Update Sadaqa donation records and metadata"},
+    {"code": "sadaqa.delete", "module": "sadaqa", "action": "delete", "description": "Cancel or void Sadaqa donations with transaction reversal"},
+    {"code": "sadaqa.reports", "module": "sadaqa", "action": "reports", "description": "Access Sadaqa donor breakdowns, trends, and fund reports"},
 
     # Reports
     {"code": "reports.view", "module": "reports", "action": "view", "description": "View financial reports and portfolio analytics"},
@@ -91,8 +113,10 @@ DEFAULT_ROLES: List[Dict[str, Any]] = [
         "permissions": [
             "finance.view", "finance.create", "finance.edit",
             "donations.view", "donations.create", "donations.edit",
+            "sadaqa.view", "sadaqa.create", "sadaqa.edit", "sadaqa.delete", "sadaqa.reports",
             "contributions.view", "contributions.create", "contributions.edit",
             "loans.view", "loans.create", "loans.edit",
+            "qard_hasanah.view", "qard_hasanah.create", "qard_hasanah.edit", "qard_hasanah.repayment", "qard_hasanah.reports",
             "reports.view",
         ],
     },
@@ -106,6 +130,8 @@ DEFAULT_ROLES: List[Dict[str, Any]] = [
             "beneficiaries.view", "beneficiaries.create", "beneficiaries.edit",
             "groups.view", "groups.create", "groups.edit",
             "loans.view", "loans.create",
+            "qard_hasanah.view", "qard_hasanah.create", "qard_hasanah.reports",
+            "sadaqa.view", "sadaqa.reports",
             "reports.view",
         ],
     },
@@ -120,7 +146,9 @@ DEFAULT_ROLES: List[Dict[str, Any]] = [
             "groups.view",
             "contributions.view",
             "loans.view",
+            "qard_hasanah.view",
             "donations.view",
+            "sadaqa.view",
         ],
     },
     {
@@ -150,6 +178,9 @@ DEFAULT_ROLES: List[Dict[str, Any]] = [
         "permissions": [
             "donations.view",
             "donations.create",
+            "sadaqa.view",
+            "sadaqa.create",
+            "sadaqa.reports",
         ],
     },
 ]

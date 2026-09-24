@@ -57,7 +57,7 @@ export default function LoginPage() {
 
         <Card>
           <CardContent className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} action="javascript:void(0)" className="space-y-4">
               {error && (
                 <div className="p-3 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 shrink-0" />

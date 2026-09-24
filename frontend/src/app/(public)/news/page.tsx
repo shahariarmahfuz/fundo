@@ -10,7 +10,12 @@ export const metadata = {
 };
 
 async function getNews(): Promise<PublicNewsPost[]> {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+  const API_URL =
+    process.env.INTERNAL_API_URL ||
+    process.env.BACKEND_URL ||
+    (process.env.NEXT_PUBLIC_API_URL?.startsWith('http')
+      ? process.env.NEXT_PUBLIC_API_URL
+      : 'http://127.0.0.1:8000/api/v1');
   try {
     const res = await fetch(`${API_URL}/public/news`, { next: { revalidate: 60 } });
     if (!res.ok) return [];

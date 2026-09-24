@@ -5,7 +5,7 @@ from sqlalchemy import select, func, or_, delete
 from sqlalchemy.orm import selectinload
 
 from app.modules.users.models import User, Role, Permission, RolePermission, UserRoleAssociation, UserRole
-from app.modules.users.schemas import UserCreate, UserUpdate, RoleCreate, RoleUpdate
+from app.modules.users.schemas import UserCreate, UserUpdate, RoleCreate, RoleUpdate, ProfileUpdate
 from app.core.security import hash_password, verify_password
 from app.core.exceptions import NotFoundException, ConflictException, BadRequestException
 from app.core.cache import cache_service
@@ -258,3 +258,42 @@ class UserService:
         await self.db.execute(delete(Role).where(Role.id == role_id))
         await self.db.commit()
         await cache_service.clear()
+
+    async def update_profile(self, user_id: uuid.UUID, profile_in: ProfileUpdate) -> User:
+        user = await self.get_by_id(user_id)
+        if not user:
+            raise NotFoundException("User", user_id)
+
+        if profile_in.full_name is not None and profile_in.full_name.strip():
+            user.full_name = profile_in.full_name.strip()
+        if profile_in.phone is not None:
+            user.phone = profile_in.phone.strip() if profile_in.phone else None
+
+        await self.db.commit()
+        await self.db.refresh(user)
+        await cache_service.delete(f"fundo:perms:{user_id}")
+        return user
+
+    async def change_password(
+        self,
+        user_id: uuid.UUID,
+        current_password: str,
+        new_password: str,
+        confirm_new_password: str
+    ) -> bool:
+        if new_password != confirm_new_password:
+            raise BadRequestException("New password and confirmation password do not match.")
+        if len(new_password) < 6:
+            raise BadRequestException("New password must be at least 6 characters long.")
+
+        user = await self.get_by_id(user_id)
+        if not user:
+            raise NotFoundException("User", user_id)
+
+        if not verify_password(current_password, user.hashed_password):
+            raise BadRequestException("Current password is incorrect.")
+
+        user.hashed_password = hash_password(new_password)
+        await self.db.commit()
+        await cache_service.delete(f"fundo:perms:{user_id}")
+        return True

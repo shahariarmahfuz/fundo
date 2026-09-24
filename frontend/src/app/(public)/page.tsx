@@ -16,7 +16,12 @@ import { formatCurrency } from '@/lib/utils';
 import { PublicProject } from '@/types/public';
 
 async function getPublicHomeData() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+  const API_URL =
+    process.env.INTERNAL_API_URL ||
+    process.env.BACKEND_URL ||
+    (process.env.NEXT_PUBLIC_API_URL?.startsWith('http')
+      ? process.env.NEXT_PUBLIC_API_URL
+      : 'http://127.0.0.1:8000/api/v1');
   try {
     const [sectionsRes, projectsRes] = await Promise.all([
       fetch(`${API_URL}/public/sections`, { next: { revalidate: 60 } }),
@@ -78,6 +83,12 @@ export default async function HomePage() {
                 <Button size="lg" className="gap-2">
                   <span>Explore Active Projects</span>
                   <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="/apply-for-membership">
+                <Button variant="outline" size="lg" className="border-teal-700 text-teal-700 hover:bg-teal-50 gap-2">
+                  <Users className="h-4 w-4 text-teal-700" />
+                  <span>Become a Member</span>
                 </Button>
               </Link>
               <Link href="/transparency">

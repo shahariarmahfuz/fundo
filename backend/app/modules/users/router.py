@@ -22,7 +22,9 @@ from app.modules.users.schemas import (
     RoleResponse,
     RoleCreate,
     RoleUpdate,
-    PermissionResponse
+    PermissionResponse,
+    ProfileUpdate,
+    ChangePasswordRequest
 )
 from app.modules.users.service import UserService
 from app.core.config import settings
@@ -159,6 +161,34 @@ async def get_me(
     db: AsyncSession = Depends(get_db)
 ):
     return await build_user_response(current_user, db)
+
+
+@router.patch("/auth/profile", response_model=UserResponse)
+async def update_my_profile(
+    profile_in: ProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    service = UserService(db)
+    user = await service.update_profile(current_user.id, profile_in)
+    return await build_user_response(user, db)
+
+
+@router.post("/auth/change-password")
+async def change_my_password(
+    pwd_in: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    service = UserService(db)
+    await service.change_password(
+        user_id=current_user.id,
+        current_password=pwd_in.current_password,
+        new_password=pwd_in.new_password,
+        confirm_new_password=pwd_in.confirm_new_password
+    )
+    return {"success": True, "detail": "Password changed successfully."}
+
 
 
 # ================= User Management =================

@@ -16,7 +16,7 @@ export function PublicNavbar() {
           </div>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+        <nav className="hidden lg:flex items-center gap-5 text-sm font-medium text-slate-600">
           <Link href="/about" className="hover:text-teal-700 transition-colors">About</Link>
           <Link href="/mission" className="hover:text-teal-700 transition-colors">Mission</Link>
           <Link href="/activities" className="hover:text-teal-700 transition-colors">Activities</Link>
@@ -26,11 +26,20 @@ export function PublicNavbar() {
           <Link href="/news" className="hover:text-teal-700 transition-colors">News</Link>
           <Link href="/transparency" className="hover:text-teal-700 transition-colors">Transparency</Link>
           <Link href="/contact" className="hover:text-teal-700 transition-colors">Contact</Link>
+          <Link href="/apply-for-membership" className="text-teal-700 hover:text-teal-800 font-semibold transition-colors">
+            Apply for Membership
+          </Link>
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link href="/apply-for-membership">
+            <Button variant="outline" size="sm" className="hidden sm:inline-flex gap-1.5 border-teal-600 text-teal-700 hover:bg-teal-50">
+              <UserCheck className="h-4 w-4 text-teal-700" />
+              <span>Become a Member</span>
+            </Button>
+          </Link>
           <Link href="/admin">
-            <Button variant="outline" size="sm" className="hidden sm:inline-flex gap-1.5 border-slate-300">
+            <Button variant="outline" size="sm" className="hidden md:inline-flex gap-1.5 border-slate-300">
               <ShieldCheck className="h-4 w-4 text-teal-700" />
               <span>Staff Portal</span>
             </Button>

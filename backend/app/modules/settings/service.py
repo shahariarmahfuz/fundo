@@ -45,7 +45,24 @@ class SettingsService:
         if setting_in.is_public is not None:
             setting.is_public = setting_in.is_public
 
+        if key == "base_monthly_contribution":
+            try:
+                new_amt = float(setting_in.value)
+                from app.modules.contributions.service import ContributionService
+                from app.modules.contributions.schemas import BaseContributionRateUpdate
+                contrib_svc = ContributionService(self.db)
+                await contrib_svc.update_base_rate(
+                    BaseContributionRateUpdate(
+                        amount=new_amt,
+                        description=setting_in.description or "Updated via system settings"
+                    )
+                )
+            except Exception as e:
+                # If conversion fails or already handled, continue
+                pass
+
         await self.db.commit()
         await self.db.refresh(setting)
         await cache_service.delete("settings:public")
         return setting
+

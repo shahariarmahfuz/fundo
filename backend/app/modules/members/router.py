@@ -142,3 +142,27 @@ async def delete_member(
     await service.db.delete(member)
     await service.db.commit()
     return {"success": True, "detail": "Member deleted successfully"}
+
+
+@router.get("/{member_id}/ledger")
+async def get_member_contribution_ledger(
+    member_id: uuid.UUID,
+    current_user: User = Depends(require_permission("members.view")),
+    db: AsyncSession = Depends(get_db)
+):
+    from app.modules.contributions.service import ContributionService
+    service = ContributionService(db)
+    return await service.get_member_ledger(member_id=member_id)
+
+
+@router.get("/{member_id}/due-preview")
+async def get_member_due_preview(
+    member_id: uuid.UUID,
+    month: Optional[str] = Query(None),
+    current_user: User = Depends(require_permission("members.view")),
+    db: AsyncSession = Depends(get_db)
+):
+    from app.modules.contributions.service import ContributionService
+    service = ContributionService(db)
+    return await service.get_member_due_preview(member_id=member_id, month=month)
+

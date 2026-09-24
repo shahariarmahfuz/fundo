@@ -134,16 +134,94 @@ export interface Contribution {
   member_id: string;
   member_name?: string | null;
   member_number?: string | null;
+  group_id?: string | null;
+  group_name?: string | null;
+  group_code?: string | null;
   fund_id: string;
   fund_name?: string | null;
   amount: number;
+  contribution_month: string;
   contribution_type: string;
   payment_method: string;
   payment_reference?: string | null;
+  notes?: string | null;
   status: string;
   contribution_date: string;
+  recorded_by?: string | null;
   created_at: string;
 }
+
+export interface MemberDuePreview {
+  member_id: string;
+  member_name: string;
+  member_number: string;
+  group_id?: string | null;
+  group_name?: string | null;
+  contribution_month: string;
+  base_contribution: number;
+  already_paid: number;
+  outstanding_due: number;
+}
+
+export interface MemberMonthlyLedgerItem {
+  month: string;
+  expected_amount: number;
+  paid_amount: number;
+  due_amount: number;
+  status: 'paid' | 'partial' | 'unpaid' | 'surplus';
+  payments: Contribution[];
+}
+
+export interface MemberContributionLedger {
+  member_id: string;
+  member_name: string;
+  member_number: string;
+  group_id?: string | null;
+  group_name?: string | null;
+  join_date: string;
+  total_expected: number;
+  total_paid: number;
+  total_due: number;
+  monthly_records: MemberMonthlyLedgerItem[];
+  transactions: Contribution[];
+}
+
+export interface GroupMemberFundStatus {
+  member_id: string;
+  member_name: string;
+  member_number: string;
+  membership_status: string;
+  current_month_expected: number;
+  current_month_paid: number;
+  current_month_due: number;
+  lifetime_contributed: number;
+}
+
+export interface GroupFundData {
+  group_id: string;
+  group_name: string;
+  group_code: string;
+  region?: string | null;
+  meeting_frequency: string;
+  status: string;
+  total_members: number;
+  current_month: string;
+  current_month_contributions: number;
+  total_contributions: number;
+  outstanding_member_due: number;
+  members: GroupMemberFundStatus[];
+}
+
+export interface BaseContributionRate {
+  id: string;
+  amount: number;
+  effective_from: string;
+  effective_to?: string | null;
+  description?: string | null;
+  created_by?: string | null;
+  created_at: string;
+}
+
 
 export interface Loan {
   id: string;

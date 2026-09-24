@@ -1,54 +1,110 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ApiClient } from '@/lib/api';
-import { Group, Contribution, Member } from '@/types/admin';
+import { Group, GroupFundData } from '@/types/admin';
 import { PaginatedResponse } from '@/types/api';
 import { formatCurrency } from '@/lib/utils';
-import { Landmark, Search, ArrowLeft, PiggyBank, Users } from 'lucide-react';
+import {
+  Landmark,
+  Search,
+  ArrowLeft,
+  PiggyBank,
+  Users,
+  Calendar,
+  AlertCircle,
+  CheckCircle2,
+  Plus,
+  BookOpen,
+  ArrowRight
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { AccessDenied } from '@/components/admin/PermissionGuard';
 
-export default function GroupFundPage() {
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [contributions, setContributions] = useState<Contribution[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+function getSelectableMonths() {
+  const months: { value: string; label: string }[] = [];
+  const now = new Date();
+  for (let i = -6; i <= 1; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    months.push({ value: val, label });
+  }
+  return months;
+}
+
+function GroupFundContent() {
+  const searchParams = useSearchParams();
   const { hasPermission, loading: authLoading, user } = useAuth();
 
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>(searchParams.get('group_id') || '');
+  const currentMonthStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+  const [selectedMonth, setSelectedMonth] = useState(currentMonthStr);
+
+  const [groupFundData, setGroupFundData] = useState<GroupFundData | null>(null);
+  const [loadingGroups, setLoadingGroups] = useState(true);
+  const [loadingFund, setLoadingFund] = useState(false);
+  const [memberSearch, setMemberSearch] = useState('');
+
+  // Load groups
   useEffect(() => {
-    async function loadData() {
+    async function loadGroups() {
       if (!hasPermission('groups.view')) {
-        setLoading(false);
+        setLoadingGroups(false);
         return;
       }
       try {
-        setLoading(true);
-        const [groupsRes, contribRes, membersRes] = await Promise.all([
-          ApiClient.get<PaginatedResponse<Group>>('/groups?page=1&page_size=100'),
-          ApiClient.get<PaginatedResponse<Contribution>>('/contributions?page=1&page_size=200'),
-          ApiClient.get<PaginatedResponse<Member>>('/members?page=1&page_size=200')
-        ]);
-        setGroups(groupsRes.items || []);
-        setContributions(contribRes.items || []);
-        setMembers(membersRes.items || []);
+        setLoadingGroups(true);
+        const res = await ApiClient.get<PaginatedResponse<Group>>('/groups?page=1&page_size=100');
+        const list = res.items || [];
+        setGroups(list);
+
+        if (!selectedGroupId && list.length > 0) {
+          setSelectedGroupId(list[0].id);
+        }
       } catch (err) {
-        console.error('Failed to load group fund data:', err);
+        console.error('Failed to load groups:', err);
       } finally {
-        setLoading(false);
+        setLoadingGroups(false);
       }
     }
 
     if (!authLoading) {
-      loadData();
+      loadGroups();
     }
   }, [authLoading, hasPermission]);
+
+  // Load selected group's fund data
+  useEffect(() => {
+    async function fetchFundData() {
+      if (!selectedGroupId || !hasPermission('groups.view')) {
+        return;
+      }
+      try {
+        setLoadingFund(true);
+        const data = await ApiClient.get<GroupFundData>(
+          `/contributions/group-fund/${selectedGroupId}?month=${selectedMonth}`
+        );
+        setGroupFundData(data);
+      } catch (err) {
+        console.error('Failed to load group fund data:', err);
+      } finally {
+        setLoadingFund(false);
+      }
+    }
+
+    if (selectedGroupId && !authLoading) {
+      fetchFundData();
+    }
+  }, [selectedGroupId, selectedMonth, authLoading, hasPermission]);
 
   if (authLoading) {
     return (
@@ -74,168 +130,264 @@ export default function GroupFundPage() {
     );
   }
 
-  // Create member ID to Group mapping
-  const memberGroupMap = new Map<string, string>();
-  members.forEach((m) => {
-    if (m.group_id) {
-      memberGroupMap.set(m.id, m.group_id);
-    }
+  const months = getSelectableMonths();
+
+  // Filter members in group
+  const filteredMembers = (groupFundData?.members || []).filter((m) => {
+    if (!memberSearch.trim()) return true;
+    const term = memberSearch.toLowerCase();
+    return (
+      m.member_name.toLowerCase().includes(term) ||
+      m.member_number.toLowerCase().includes(term)
+    );
   });
-
-  // Calculate funds per group
-  const groupFundData = groups.map((g) => {
-    const groupContributions = contributions.filter((c) => {
-      const gid = (c as any).group_id || memberGroupMap.get(c.member_id);
-      return gid === g.id;
-    });
-    const totalCollected = groupContributions.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
-    return {
-      ...g,
-      total_collected: totalCollected,
-      contribution_count: groupContributions.length
-    };
-  });
-
-  const filteredGroups = groupFundData.filter((g) =>
-    g.name.toLowerCase().includes(search.toLowerCase()) ||
-    g.code.toLowerCase().includes(search.toLowerCase()) ||
-    (g.region && g.region.toLowerCase().includes(search.toLowerCase()))
-  );
-
-  const grandTotal = filteredGroups.reduce((sum, g) => sum + g.total_collected, 0);
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 w-full">
+    <div className="flex-1 flex flex-col min-w-0 w-full overflow-y-auto">
       <AdminHeader
-        title="Group Funds"
-        subtitle="Monitored mutual capital pools and collective savings reserves"
+        title="Group Fund & Member Allocation"
+        subtitle="Track collective group funds, member monthly due reconciliation, and historical attribution"
         userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
       />
 
-      <div className="p-4 sm:p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <Link
-            href="/admin/groups"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Manage Groups</span>
-          </Link>
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
+        {/* Navigation & Controls */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Link
+              href="/admin/contributions"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Back to Contributions</span>
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Month Selector */}
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="text-xs border border-slate-200 rounded-md px-2.5 py-1.5 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500 h-8 font-medium"
+            >
+              {months.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label} ({m.value}) {m.value === currentMonthStr ? '— Current' : ''}
+                </option>
+              ))}
+            </select>
+
+            {/* Group Switcher Dropdown */}
+            <select
+              value={selectedGroupId}
+              onChange={(e) => setSelectedGroupId(e.target.value)}
+              className="text-xs border border-slate-200 rounded-md px-3 py-1.5 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500 font-semibold h-8"
+            >
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name} ({g.code})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {/* METRICS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-slate-500 font-medium">Active Savings Circles</div>
-              <div className="text-xl font-bold text-slate-900 mt-1">{filteredGroups.length}</div>
-              <div className="text-[11px] text-teal-700 mt-0.5">Grassroots clusters</div>
-            </CardContent>
-          </Card>
+        {/* Selected Group Header & Metric Cards */}
+        {groupFundData && (
+          <div className="space-y-6">
+            <Card className="border border-slate-200 bg-white">
+              <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2.5">
+                      <Landmark className="h-5 w-5 text-teal-700" />
+                      <h2 className="text-lg font-bold text-slate-900">{groupFundData.group_name}</h2>
+                      <Badge variant="outline" className="font-mono text-xs">
+                        {groupFundData.group_code}
+                      </Badge>
+                      <Badge variant="outline" className="bg-teal-50 text-teal-700 text-xs capitalize">
+                        {groupFundData.status}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      Region: {groupFundData.region || 'National'} • Meeting Frequency: {groupFundData.meeting_frequency}
+                    </p>
+                  </div>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-slate-500 font-medium">Total Group Capital</div>
-              <div className="text-xl font-bold text-teal-700 mt-1">
-                {formatCurrency(grandTotal)}
-              </div>
-              <div className="text-[11px] text-slate-500 mt-0.5">Pooled member savings</div>
-            </CardContent>
-          </Card>
+                  <div className="flex items-center gap-2">
+                    <Link href={`/admin/groups/ledger?group_id=${groupFundData.group_id}`}>
+                      <Button variant="outline" size="sm" className="text-xs gap-1.5 h-8">
+                        <BookOpen className="h-3.5 w-3.5 text-teal-700" />
+                        <span>View Group Ledger</span>
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-slate-500 font-medium">Average Pool Balance</div>
-              <div className="text-xl font-bold text-slate-900 mt-1">
-                {formatCurrency(filteredGroups.length > 0 ? grandTotal / filteredGroups.length : 0)}
-              </div>
-              <div className="text-[11px] text-slate-500 mt-0.5">Per community cluster</div>
-            </CardContent>
-          </Card>
-        </div>
+                {/* 4 Financial Metric Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-5">
+                  <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                    <span className="text-xs text-slate-500 font-medium block">Total Active Members</span>
+                    <span className="text-xl font-bold text-slate-800 mt-1 block">
+                      {groupFundData.total_members} Members
+                    </span>
+                    <span className="text-[11px] text-slate-400">Assigned to this Circle</span>
+                  </div>
 
-        {/* TABLE */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <Landmark className="h-4 w-4 text-teal-700" />
-                <CardTitle>Group Capital & Reserve Breakdown</CardTitle>
-              </div>
+                  <div className="p-4 rounded-lg bg-teal-50/70 border border-teal-200">
+                    <span className="text-xs text-teal-800 font-medium block">Total Lifetime Group Fund</span>
+                    <span className="text-xl font-bold text-teal-800 mt-1 block">
+                      {formatCurrency(groupFundData.total_contributions)}
+                    </span>
+                    <span className="text-[11px] text-teal-700/80">Cumulative member savings</span>
+                  </div>
 
-              <div className="relative w-64">
-                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
-                <Input
-                  placeholder="Filter by group code, name..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8 text-xs h-8"
-                />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
-                  <tr>
-                    <th className="p-3 pl-6">Code</th>
-                    <th className="p-3">Group Name</th>
-                    <th className="p-3">Region</th>
-                    <th className="p-3">Members</th>
-                    <th className="p-3">Frequency</th>
-                    <th className="p-3">Status</th>
-                    <th className="p-3 text-right pr-6">Accumulated Fund Pool</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={7} className="p-8 text-center text-slate-400">
-                        Loading group fund balances...
-                      </td>
-                    </tr>
-                  ) : filteredGroups.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="p-8 text-center text-slate-400">
-                        No groups found.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredGroups.map((g) => (
-                      <tr key={g.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-3 pl-6 font-mono text-[11px] font-semibold text-slate-900">
-                          {g.code}
-                        </td>
-                        <td className="p-3 font-medium text-slate-900">{g.name}</td>
-                        <td className="p-3 text-slate-600 text-[11px]">{g.region || '—'}</td>
-                        <td className="p-3">
-                          <span className="inline-flex items-center gap-1 font-medium text-slate-700">
-                            <Users className="h-3 w-3 text-slate-400" />
-                            {g.member_count}
-                          </span>
-                        </td>
-                        <td className="p-3 text-slate-600 capitalize text-[11px]">{g.meeting_frequency}</td>
-                        <td className="p-3">
-                          <Badge
-                            variant={g.status === 'active' ? 'success' : 'outline'}
-                            className="text-[10px] capitalize font-mono"
-                          >
-                            {g.status}
-                          </Badge>
-                        </td>
-                        <td className="p-3 text-right pr-6 font-bold text-slate-900 font-mono text-xs">
-                          {formatCurrency(g.total_collected)}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                  <div className="p-4 rounded-lg bg-emerald-50/70 border border-emerald-200">
+                    <span className="text-xs text-emerald-800 font-medium block">Collected for {groupFundData.current_month}</span>
+                    <span className="text-xl font-bold text-emerald-700 mt-1 block">
+                      {formatCurrency(groupFundData.current_month_contributions)}
+                    </span>
+                    <span className="text-[11px] text-emerald-600/80">Month contributions</span>
+                  </div>
+
+                  <div className="p-4 rounded-lg bg-amber-50/70 border border-amber-200">
+                    <span className="text-xs text-amber-800 font-medium block">Outstanding Member Due</span>
+                    <span className={`text-xl font-bold mt-1 block ${groupFundData.outstanding_member_due > 0 ? 'text-amber-700' : 'text-slate-600'}`}>
+                      {formatCurrency(groupFundData.outstanding_member_due)}
+                    </span>
+                    <span className="text-[11px] text-amber-700/80">
+                      {groupFundData.outstanding_member_due > 0 ? 'Pending collection from members' : 'All members current'}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Member Breakdown Table for this Group */}
+            <Card className="border border-slate-200 bg-white">
+              <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <CardTitle className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                    <Users className="h-4 w-4 text-teal-700" />
+                    <span>Member Contribution Performance ({groupFundData.members.length})</span>
+                  </CardTitle>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Accounting Month: <strong>{groupFundData.current_month}</strong>
+                  </p>
+                </div>
+
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                  <Input
+                    placeholder="Search group member..."
+                    value={memberSearch}
+                    onChange={(e) => setMemberSearch(e.target.value)}
+                    className="pl-8 text-xs h-8"
+                  />
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                {loadingFund ? (
+                  <div className="py-16 text-center text-xs text-slate-400">Loading group fund data...</div>
+                ) : filteredMembers.length === 0 ? (
+                  <div className="py-16 text-center text-xs text-slate-400">
+                    No members found in this group matching search.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-100 bg-slate-50/75 text-[11px] font-semibold text-slate-600">
+                          <th className="py-3 px-4">Member</th>
+                          <th className="py-3 px-4">Status</th>
+                          <th className="py-3 px-4">Expected Base</th>
+                          <th className="py-3 px-4">Paid This Month</th>
+                          <th className="py-3 px-4">Due This Month</th>
+                          <th className="py-3 px-4">Lifetime Contributed</th>
+                          <th className="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-slate-700">
+                        {filteredMembers.map((m) => (
+                          <tr key={m.member_id} className="hover:bg-slate-50/50">
+                            <td className="py-3 px-4">
+                              <Link
+                                href={`/admin/members/ledger?member_id=${m.member_id}`}
+                                className="font-semibold text-slate-900 hover:text-teal-700"
+                              >
+                                {m.member_name}
+                              </Link>
+                              <span className="text-[10px] text-slate-400 font-mono block">
+                                {m.member_number}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 capitalize">
+                              <Badge variant="outline" className="text-[10px]">
+                                {m.membership_status}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-4 font-medium text-slate-800">
+                              {formatCurrency(m.current_month_expected)}
+                            </td>
+                            <td className="py-3 px-4 font-semibold text-emerald-700">
+                              {formatCurrency(m.current_month_paid)}
+                            </td>
+                            <td className="py-3 px-4">
+                              {m.current_month_due > 0 ? (
+                                <span className="font-bold text-amber-700">
+                                  {formatCurrency(m.current_month_due)}
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 font-mono">৳0.00</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 font-semibold text-teal-800">
+                              {formatCurrency(m.lifetime_contributed)}
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <Link href={`/admin/members/ledger?member_id=${m.member_id}`}>
+                                  <Button size="sm" variant="ghost" className="text-[11px] h-7 px-2">
+                                    Passbook
+                                  </Button>
+                                </Link>
+                                {hasPermission('contributions.create') && (
+                                  <Link
+                                    href={`/admin/contributions/add?member_id=${m.member_id}&month=${groupFundData.current_month}`}
+                                  >
+                                    <Button
+                                      size="sm"
+                                      className={`text-[11px] h-7 px-2 ${
+                                        m.current_month_due > 0
+                                          ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                                          : 'bg-teal-700 hover:bg-teal-800 text-white'
+                                      }`}
+                                    >
+                                      <span>{m.current_month_due > 0 ? 'Collect Due' : 'Add Deposit'}</span>
+                                    </Button>
+                                  </Link>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+export default function GroupFundPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm text-slate-500">Loading group fund data...</div>}>
+      <GroupFundContent />
+    </Suspense>
   );
 }

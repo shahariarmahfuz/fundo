@@ -86,14 +86,16 @@ export default function GroupLedgerPage() {
     }
   });
 
-  // Enrich contributions with group info if member belongs to a group
+  // Enrich contributions with historical group allocation
   const enrichedContributions = contributions.map((c) => {
-    const group = memberGroupMap.get(c.member_id);
+    const historicalGroup = c.group_id ? groups.find((g) => g.id === c.group_id) : null;
+    const currentMemberGroup = memberGroupMap.get(c.member_id);
+    const assignedGroup = historicalGroup || currentMemberGroup;
     return {
       ...c,
-      group_name: group?.name || 'Unassigned / Individual',
-      group_code: group?.code || '—',
-      group_id: group?.id || null
+      group_name: c.group_name || assignedGroup?.name || 'Unassigned / Individual',
+      group_code: c.group_code || assignedGroup?.code || '—',
+      group_id: c.group_id || assignedGroup?.id || null
     };
   });
 

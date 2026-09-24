@@ -1,37 +1,42 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { AdminHeader } from '@/components/admin/AdminHeader';
-import { Card, CardContent } from '@/components/ui/Card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { ApiClient } from '@/lib/api';
-import { Contribution, Member, Fund } from '@/types/admin';
+import { Contribution, Group } from '@/types/admin';
 import { PaginatedResponse } from '@/types/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { PiggyBank, Plus, Search, AlertCircle, X, CheckCircle2 } from 'lucide-react';
+import {
+  PiggyBank,
+  Plus,
+  Search,
+  Users,
+  Calendar,
+  BookOpen,
+  CalendarClock,
+  ArrowUpRight,
+  Filter
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { AccessDenied } from '@/components/admin/PermissionGuard';
 
 export default function AdminContributionsPage() {
   const { hasPermission, loading: authLoading, user } = useAuth();
   const [contributions, setContributions] = useState<Contribution[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [funds, setFunds] = useState<Fund[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [modalLoading, setModalLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [totalCount, setTotalCount] = useState(0);
 
-  const [form, setForm] = useState({
-    member_id: '',
-    fund_id: '',
-    amount: '',
-    contribution_type: 'monthly_savings',
-    payment_method: 'bank_transfer',
-    payment_reference: ''
-  });
+  // Filters
+  const [search, setSearch] = useState('');
+  const [selectedGroup, setSelectedGroup] = useState('all');
+  const [selectedMonth, setSelectedMonth] = useState('all');
+  const [page, setPage] = useState(1);
 
   const loadData = async () => {
     if (!hasPermission('contributions.view')) {
@@ -40,30 +45,27 @@ export default function AdminContributionsPage() {
     }
     try {
       setLoading(true);
-      const resC = await ApiClient.get<PaginatedResponse<Contribution>>('/contributions?page=1&page_size=50');
-      setContributions(resC.items);
-
-      if (hasPermission('members.view')) {
-        try {
-          const resM = await ApiClient.get<PaginatedResponse<Member>>('/members?page=1&page_size=100');
-          setMembers(resM.items);
-          if (resM.items.length > 0 && !form.member_id) {
-            setForm(f => ({ ...f, member_id: resM.items[0].id }));
-          }
-        } catch {}
+      let url = `/contributions?page=${page}&page_size=50`;
+      if (selectedGroup !== 'all') {
+        url += `&group_id=${selectedGroup}`;
+      }
+      if (selectedMonth !== 'all') {
+        url += `&contribution_month=${selectedMonth}`;
+      }
+      if (search.trim()) {
+        url += `&search=${encodeURIComponent(search.trim())}`;
       }
 
-      if (hasPermission('finance.view')) {
-        try {
-          const resF = await ApiClient.get<Fund[]>('/finance/funds?active_only=true');
-          setFunds(resF);
-          if (resF.length > 0 && !form.fund_id) {
-            setForm(f => ({ ...f, fund_id: resF[0].id }));
-          }
-        } catch {}
-      }
+      const [resC, resG] = await Promise.all([
+        ApiClient.get<PaginatedResponse<Contribution>>(url),
+        ApiClient.get<PaginatedResponse<Group>>('/groups?page=1&page_size=100').catch(() => ({ items: [] }))
+      ]);
+
+      setContributions(resC.items || []);
+      setTotalCount(resC.total || 0);
+      setGroups(resG.items || []);
     } catch (err) {
-      console.error('Failed to load contributions data:', err);
+      console.error('Failed to load contributions:', err);
     } finally {
       setLoading(false);
     }
@@ -75,249 +77,299 @@ export default function AdminContributionsPage() {
     } else if (!authLoading) {
       setLoading(false);
     }
-  }, [authLoading, hasPermission]);
+  }, [authLoading, hasPermission, page, selectedGroup, selectedMonth]);
 
-  const handleRecord = async (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setModalLoading(true);
-    setErrorMsg('');
-    try {
-      await ApiClient.post('/contributions', {
-        member_id: form.member_id,
-        fund_id: form.fund_id,
-        amount: parseFloat(form.amount),
-        contribution_type: form.contribution_type,
-        payment_method: form.payment_method,
-        payment_reference: form.payment_reference || undefined
-      });
-      setShowModal(false);
-      setForm(f => ({ ...f, amount: '', payment_reference: '' }));
-      loadData();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to record contribution');
-    } finally {
-      setModalLoading(false);
-    }
+    setPage(1);
+    loadData();
   };
 
-  if (!authLoading && !hasPermission('contributions.view')) {
+  if (authLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="text-slate-400 text-sm">Verifying authorization...</div>
+      </div>
+    );
+  }
+
+  if (!hasPermission('contributions.view')) {
     return (
       <div className="flex-1 flex flex-col min-w-0 w-full">
         <AdminHeader
-          title="Member Savings & Contributions"
-          subtitle="Mutual savings deposits and equity shares"
+          title="Contributions Management"
+          subtitle="Member savings passbooks and group fund collections"
           userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
         />
         <AccessDenied
           permission="contributions.view"
-          message="You do not have authorization to view the contributions module."
+          message="You do not have permission to view member contributions."
         />
       </div>
     );
   }
 
+  // Summary figures
+  const totalAmountSum = contributions.reduce((acc, c) => acc + Number(c.amount || 0), 0);
+  const currentMonthStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+  const currentMonthSum = contributions
+    .filter((c) => c.contribution_month === currentMonthStr)
+    .reduce((acc, c) => acc + Number(c.amount || 0), 0);
+
+  // Extract unique contribution months for filter
+  const uniqueMonths = Array.from(new Set(contributions.map((c) => c.contribution_month).filter(Boolean))).sort().reverse();
+
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto min-w-0 w-full">
+    <div className="flex-1 flex flex-col min-w-0 w-full overflow-y-auto">
       <AdminHeader
-        title="Member Savings & Contributions"
-        subtitle="Manage regular member dues, mutual savings deposits, and equity shares"
+        title="Member Contributions & Savings"
+        subtitle="Individual passbook entries, group fund accounting, and monthly due tracking"
         userRole={user?.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
       />
 
-      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="text-xs text-slate-500 font-medium">
-            PostgreSQL ACID Double-Entry Transaction Ledger Enforced
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
+        {/* Navigation & Action Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link href="/admin/groups/fund">
+              <Button variant="outline" size="sm" className="text-xs gap-1.5 h-8">
+                <Users className="h-3.5 w-3.5 text-teal-700" />
+                <span>Group Funds</span>
+              </Button>
+            </Link>
+            <Link href="/admin/members/ledger">
+              <Button variant="outline" size="sm" className="text-xs gap-1.5 h-8">
+                <BookOpen className="h-3.5 w-3.5 text-teal-700" />
+                <span>Member Ledgers</span>
+              </Button>
+            </Link>
+            <Link href="/admin/members/due-list">
+              <Button variant="outline" size="sm" className="text-xs gap-1.5 h-8">
+                <CalendarClock className="h-3.5 w-3.5 text-amber-600" />
+                <span>Monthly Due List</span>
+              </Button>
+            </Link>
           </div>
 
           {hasPermission('contributions.create') && (
-            <Button
-              onClick={() => setShowModal(true)}
-              size="sm"
-              className="gap-1.5 shrink-0"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Record Contribution</span>
-            </Button>
+            <Link href="/admin/contributions/add">
+              <Button size="sm" className="bg-teal-700 hover:bg-teal-800 text-white gap-1.5 text-xs h-8">
+                <Plus className="h-3.5 w-3.5" />
+                <span>Record Contribution</span>
+              </Button>
+            </Link>
           )}
         </div>
 
-        <Card className="min-w-0 w-full overflow-hidden">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto max-w-full">
-              <table className="w-full min-w-[650px] text-left text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
-                  <tr>
-                    <th className="p-3 pl-6">Receipt #</th>
-                    <th className="p-3">Member</th>
-                    <th className="p-3">Type</th>
-                    <th className="p-3">Fund Target</th>
-                    <th className="p-3">Payment Method</th>
-                    <th className="p-3">Amount</th>
-                    <th className="p-3 pr-6 text-right">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={7} className="p-8 text-center text-slate-400">
-                        Loading contributions ledger...
-                      </td>
-                    </tr>
-                  ) : contributions.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="p-8 text-center text-slate-400">
-                        No contributions recorded yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    contributions.map((c) => (
-                      <tr key={c.id} className="hover:bg-slate-50/50">
-                        <td className="p-3 pl-6 font-medium text-slate-900">
-                          {c.receipt_number}
-                        </td>
-                        <td className="p-3 font-semibold text-slate-900">
-                          {c.member_name} <span className="font-normal text-slate-400 text-[11px]">({c.member_number})</span>
-                        </td>
-                        <td className="p-3">
-                          <Badge variant="outline" className="text-[10px] capitalize">
-                            {c.contribution_type.replace('_', ' ')}
-                          </Badge>
-                        </td>
-                        <td className="p-3 text-slate-600">
-                          {c.fund_name || 'General Operations Fund'}
-                        </td>
-                        <td className="p-3 capitalize text-slate-500">
-                          {c.payment_method.replace('_', ' ')}
-                        </td>
-                        <td className="p-3 font-bold text-teal-800">
-                          +{formatCurrency(c.amount)}
-                        </td>
-                        <td className="p-3 pr-6 text-right text-slate-500">
-                          {formatDate(c.contribution_date)}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg border border-slate-200 shadow-xl max-w-md w-full p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-900">Record Member Contribution</h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            {errorMsg && (
-              <div className="p-3 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                <span>{errorMsg}</span>
+        {/* High-Level Financial Metrics */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card className="border border-slate-200 bg-white">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-slate-500">Filtered Total Collected</p>
+                  <h3 className="text-xl font-bold text-slate-900 mt-1">{formatCurrency(totalAmountSum)}</h3>
+                  <p className="text-[11px] text-slate-400 mt-0.5">{totalCount} total transactions recorded</p>
+                </div>
+                <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center text-teal-700">
+                  <PiggyBank className="h-5 w-5" />
+                </div>
               </div>
-            )}
+            </CardContent>
+          </Card>
 
-            <form onSubmit={handleRecord} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[11px] font-medium text-slate-700">Select Member</label>
+          <Card className="border border-slate-200 bg-white">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-slate-500">Current Month Collections</p>
+                  <h3 className="text-xl font-bold text-emerald-600 mt-1">{formatCurrency(currentMonthSum)}</h3>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Month: {currentMonthStr}</p>
+                </div>
+                <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                  <Calendar className="h-5 w-5" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-slate-200 bg-white">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-slate-500">Active Groups Contributing</p>
+                  <h3 className="text-xl font-bold text-slate-900 mt-1">{groups.length} Circles</h3>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Group fund allocation enforced</p>
+                </div>
+                <div className="h-10 w-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                  <Users className="h-5 w-5" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filter Controls */}
+        <Card className="border border-slate-200 bg-white">
+          <CardContent className="p-4">
+            <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="relative flex-1 w-full">
+                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                <Input
+                  placeholder="Search by receipt #, member name, payment reference..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8 text-xs h-8"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                {/* Group Filter */}
                 <select
-                  required
-                  value={form.member_id}
-                  onChange={(e) => setForm({ ...form, member_id: e.target.value })}
-                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs text-slate-800"
+                  value={selectedGroup}
+                  onChange={(e) => {
+                    setSelectedGroup(e.target.value);
+                    setPage(1);
+                  }}
+                  className="text-xs border border-slate-200 rounded-md px-2.5 py-1.5 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500 h-8"
                 >
-                  {members.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.full_name} ({m.member_number})
+                  <option value="all">All Groups</option>
+                  {groups.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
                     </option>
                   ))}
                 </select>
-              </div>
 
-              <div className="space-y-1">
-                <label className="text-[11px] font-medium text-slate-700">Target Fund Pool</label>
+                {/* Month Filter */}
                 <select
-                  required
-                  value={form.fund_id}
-                  onChange={(e) => setForm({ ...form, fund_id: e.target.value })}
-                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs text-slate-800"
+                  value={selectedMonth}
+                  onChange={(e) => {
+                    setSelectedMonth(e.target.value);
+                    setPage(1);
+                  }}
+                  className="text-xs border border-slate-200 rounded-md px-2.5 py-1.5 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500 h-8"
                 >
-                  {funds.map((f) => (
-                    <option key={f.id} value={f.id}>
-                      {f.name} ({formatCurrency(f.current_balance)})
+                  <option value="all">All Months</option>
+                  {uniqueMonths.map((m) => (
+                    <option key={m} value={m}>
+                      Month: {m}
                     </option>
                   ))}
                 </select>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-slate-700">Amount ($)</label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={form.amount}
-                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                    placeholder="150.00"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-slate-700">Contribution Type</label>
-                  <select
-                    value={form.contribution_type}
-                    onChange={(e) => setForm({ ...form, contribution_type: e.target.value })}
-                    className="w-full h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs text-slate-800"
-                  >
-                    <option value="monthly_savings">Monthly Savings</option>
-                    <option value="welfare">Welfare Dues</option>
-                    <option value="shares">Equity Shares</option>
-                    <option value="emergency_fund">Emergency Reserve</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-slate-700">Payment Method</label>
-                  <select
-                    value={form.payment_method}
-                    onChange={(e) => setForm({ ...form, payment_method: e.target.value })}
-                    className="w-full h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs text-slate-800"
-                  >
-                    <option value="bank_transfer">Bank Transfer</option>
-                    <option value="mobile_money">Mobile Money</option>
-                    <option value="cash">Cash Deposit</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-slate-700">Payment Reference</label>
-                  <Input
-                    value={form.payment_reference}
-                    onChange={(e) => setForm({ ...form, payment_reference: e.target.value })}
-                    placeholder="e.g. M-PESA # / Check #"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2 border-t border-slate-100">
-                <Button type="button" variant="outline" size="sm" onClick={() => setShowModal(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" size="sm" disabled={modalLoading}>
-                  {modalLoading ? 'Recording...' : 'Post to Ledger'}
+                <Button type="submit" size="sm" variant="outline" className="text-xs h-8 gap-1">
+                  <Filter className="h-3 w-3" />
+                  <span>Filter</span>
                 </Button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+          </CardContent>
+        </Card>
+
+        {/* Contributions Ledger Table */}
+        <Card className="border border-slate-200 bg-white">
+          <CardHeader className="pb-3 border-b border-slate-100 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-semibold text-slate-900">
+              Contribution Transactions ({totalCount})
+            </CardTitle>
+            <span className="text-xs text-slate-400 font-mono">Immutable Passbook Ledger</span>
+          </CardHeader>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="py-16 text-center text-xs text-slate-400">Loading contributions records...</div>
+            ) : contributions.length === 0 ? (
+              <div className="py-16 text-center space-y-2">
+                <PiggyBank className="h-8 w-8 text-slate-300 mx-auto" />
+                <p className="text-xs text-slate-500 font-medium">No contribution records found.</p>
+                <p className="text-[11px] text-slate-400">Try adjusting your filters or record a new member deposit.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100 bg-slate-50/75 text-[11px] font-semibold text-slate-600">
+                      <th className="py-3 px-4">Receipt #</th>
+                      <th className="py-3 px-4">Member</th>
+                      <th className="py-3 px-4">Group Allocation</th>
+                      <th className="py-3 px-4">Month</th>
+                      <th className="py-3 px-4">Amount</th>
+                      <th className="py-3 px-4">Payment Method</th>
+                      <th className="py-3 px-4">Date</th>
+                      <th className="py-3 px-4">Recorded By</th>
+                      <th className="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-700">
+                    {contributions.map((c) => (
+                      <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="py-3 px-4 font-mono font-medium text-slate-900">
+                          {c.receipt_number}
+                        </td>
+                        <td className="py-3 px-4">
+                          <Link
+                            href={`/admin/members/ledger?member_id=${c.member_id}`}
+                            className="font-medium text-slate-900 hover:text-teal-700 transition-colors flex items-center gap-1"
+                          >
+                            <span>{c.member_name || 'Member'}</span>
+                            <ArrowUpRight className="h-3 w-3 text-slate-400" />
+                          </Link>
+                          <span className="text-[10px] text-slate-400 font-mono block">
+                            {c.member_number || '—'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          {c.group_name ? (
+                            <Link
+                              href={`/admin/groups/fund?group_id=${c.group_id}`}
+                              className="inline-flex items-center gap-1 text-slate-800 hover:text-teal-700"
+                            >
+                              <Users className="h-3 w-3 text-teal-700" />
+                              <span className="font-medium">{c.group_name}</span>
+                            </Link>
+                          ) : (
+                            <span className="text-slate-400 text-[11px]">—</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          <Badge variant="outline" className="font-mono text-[10px]">
+                            {c.contribution_month}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4 font-semibold text-slate-900">
+                          {formatCurrency(c.amount)}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="capitalize">{c.payment_method?.replace('_', ' ')}</span>
+                          {c.payment_reference && (
+                            <span className="text-[10px] text-slate-400 block font-mono">
+                              Ref: {c.payment_reference}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-slate-500 whitespace-nowrap">
+                          {formatDate(c.contribution_date)}
+                        </td>
+                        <td className="py-3 px-4 text-slate-500 text-[11px]">
+                          {c.recorded_by || 'System'}
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <Link
+                            href={`/admin/members/ledger?member_id=${c.member_id}`}
+                            className="text-teal-700 hover:text-teal-800 text-[11px] font-medium"
+                          >
+                            Passbook
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

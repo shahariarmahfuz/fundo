@@ -20,3 +20,5 @@ class Group(Base, TimestampMixin):
 
     # Relationships
     members = relationship("Member", back_populates="group", cascade="all, delete-orphan", lazy="selectin")
+    contributions = relationship("Contribution", back_populates="group", lazy="select")
+

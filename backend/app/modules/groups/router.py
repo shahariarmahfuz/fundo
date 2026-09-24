@@ -134,3 +134,28 @@ async def delete_group(
     await service.db.delete(group)
     await service.db.commit()
     return {"success": True, "detail": "Group deleted successfully"}
+
+
+@router.get("/{group_id}/fund")
+async def get_group_fund_details(
+    group_id: uuid.UUID,
+    month: Optional[str] = Query(None),
+    current_user: User = Depends(require_permission("groups.view")),
+    db: AsyncSession = Depends(get_db)
+):
+    from app.modules.contributions.service import ContributionService
+    service = ContributionService(db)
+    return await service.get_group_fund(group_id=group_id, target_month=month)
+
+
+@router.get("/{group_id}/ledger")
+async def get_group_ledger_details(
+    group_id: uuid.UUID,
+    month: Optional[str] = Query(None),
+    current_user: User = Depends(require_permission("groups.view")),
+    db: AsyncSession = Depends(get_db)
+):
+    from app.modules.contributions.service import ContributionService
+    service = ContributionService(db)
+    return await service.get_group_fund(group_id=group_id, target_month=month)
+

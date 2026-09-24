@@ -21,18 +21,54 @@ export interface Member {
   id: string;
   member_number: string;
   full_name: string;
-  national_id?: string | null;
-  phone: string;
-  email?: string | null;
-  gender: string;
-  date_of_birth?: string | null;
-  address?: string | null;
-  group_id?: string | null;
+  group_id: string;
   group_name?: string | null;
-  membership_status: string;
   join_date: string;
+  membership_status: string;
+
+  // Optional Personal Info
+  father_name?: string | null;
+  mother_name?: string | null;
+  date_of_birth?: string | null;
+  gender?: string | null;
+  national_id?: string | null;
+  occupation?: string | null;
+  education?: string | null;
+  blood_group?: string | null;
+  marital_status?: string | null;
+  phone?: string | null;
+  alt_phone?: string | null;
+  email?: string | null;
+  present_address?: string | null;
+  permanent_address?: string | null;
+  address?: string | null;
+
+  // Optional Emergency Contact
+  emergency_name?: string | null;
+  emergency_relation?: string | null;
+  emergency_phone?: string | null;
+
+  // Optional Reference
+  reference_name?: string | null;
+  reference_phone?: string | null;
+  reference_relation?: string | null;
+
+  // Optional Commitment & Documents
+  commitment?: string | null;
+  photo_url?: string | null;
+  signature_url?: string | null;
+  document_type?: string | null;
+  nid_front_url?: string | null;
+  nid_back_url?: string | null;
+
+  // Optional Additional Info
+  reason_for_joining?: string | null;
+  notes?: string | null;
+
   created_at: string;
+  updated_at?: string;
 }
+
 
 export interface Beneficiary {
   id: string;

@@ -27,3 +27,41 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* ==================================================
+   FOUNDATION MANAGEMENT SYSTEM - DESKTOP TYPOGRAPHY
+   Enhances desktop readability moderately while
+   preserving compact mobile layout.
+   ================================================== */
+@media (min-width: 640px) {
+  /* Form labels: ~14px */
+  .admin-portal label:not(.keep-size) {
+    font-size: 0.875rem !important; /* 14px */
+    line-height: 1.25rem !important;
+  }
+
+  /* Form select, input & textarea text: ~14px */
+  .admin-portal input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  .admin-portal select,
+  .admin-portal textarea {
+    font-size: 0.875rem !important; /* 14px */
+  }
+
+  /* Tables: ~14px body text, 12.5px-13px headers */
+  .admin-portal table {
+    font-size: 0.875rem !important; /* 14px */
+    line-height: 1.25rem !important;
+  }
+
+  .admin-portal table thead th {
+    font-size: 0.8125rem !important; /* 13px */
+    line-height: 1.125rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  .admin-portal table tbody td {
+    font-size: 0.875rem !important; /* 14px */
+    line-height: 1.25rem !important;
+  }
+}

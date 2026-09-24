@@ -200,7 +200,7 @@ export function AdminSidebar() {
       {/* Sidebar Navigation */}
       <aside
         className={cn(
-          "w-64 border-r border-slate-200 bg-white flex flex-col shrink-0 min-h-screen transition-transform duration-300 ease-in-out",
+          "w-64 lg:w-[270px] border-r border-slate-200 bg-white flex flex-col shrink-0 min-h-screen transition-transform duration-300 ease-in-out",
           // Mobile Drawer Behavior:
           "fixed inset-y-0 left-0 z-50 shadow-2xl lg:shadow-none",
           isOpen ? "translate-x-0" : "-translate-x-full",
@@ -210,14 +210,14 @@ export function AdminSidebar() {
         aria-label="Management Navigation"
       >
         {/* Brand Bar with Close Button on Mobile */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200 shrink-0">
-          <Link href="/admin" onClick={closeSidebar} className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-700 text-white shadow-sm">
-              <HeartHandshake className="h-4 w-4" />
+        <div className="h-16 lg:h-20 flex items-center justify-between px-5 sm:px-6 border-b border-slate-200 shrink-0">
+          <Link href="/admin" onClick={closeSidebar} className="flex items-center gap-3">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-teal-700 text-white shadow-sm shrink-0">
+              <HeartHandshake className="h-5 w-5" />
             </div>
             <div>
-              <div className="text-sm font-bold text-slate-900 leading-tight">Fundo Admin</div>
-              <div className="text-[10px] text-teal-700 font-semibold uppercase tracking-wider">Management System</div>
+              <div className="text-sm sm:text-base font-bold text-slate-900 leading-tight">Fundo Admin</div>
+              <div className="text-[10px] sm:text-[11.5px] text-teal-700 font-semibold uppercase tracking-wider">Management System</div>
             </div>
           </Link>
 
@@ -233,8 +233,8 @@ export function AdminSidebar() {
         </div>
 
         {/* Nav List */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          <div className="px-3 pb-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+        <nav className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
+          <div className="px-3 pb-2 text-[11px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">
             Foundation Modules
           </div>
 
@@ -246,17 +246,17 @@ export function AdminSidebar() {
                 href="/admin"
                 onClick={closeSidebar}
                 className={cn(
-                  "flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md transition-colors",
+                  "flex items-center justify-between px-3 py-2 sm:py-2.5 text-xs sm:text-[15px] font-medium rounded-md transition-colors leading-snug",
                   isDashboardActive
                     ? "bg-teal-50 text-teal-800 font-semibold"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 )}
               >
-                <div className="flex items-center gap-2.5">
-                  <LayoutDashboard className={cn("h-4 w-4", isDashboardActive ? "text-teal-700" : "text-slate-400")} />
+                <div className="flex items-center gap-3">
+                  <LayoutDashboard className={cn("h-4 w-4 sm:h-[18px] sm:w-[18px] shrink-0", isDashboardActive ? "text-teal-700" : "text-slate-400")} />
                   <span>Dashboard</span>
                 </div>
-                {isDashboardActive && <ChevronRight className="h-3 w-3 text-teal-700" />}
+                {isDashboardActive && <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal-700 shrink-0" />}
               </Link>
             );
           })()}
@@ -268,27 +268,27 @@ export function AdminSidebar() {
                 type="button"
                 onClick={toggleMemberMenu}
                 className={cn(
-                  "w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md transition-colors text-left",
+                  "w-full flex items-center justify-between px-3 py-2 sm:py-2.5 text-xs sm:text-[15px] font-medium rounded-md transition-colors text-left leading-snug",
                   isMemberRoute
                     ? "bg-teal-50/70 text-teal-900 font-semibold"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 )}
                 aria-expanded={isMemberExpanded}
               >
-                <div className="flex items-center gap-2.5">
-                  <Users className={cn("h-4 w-4", isMemberRoute ? "text-teal-700" : "text-slate-400")} />
+                <div className="flex items-center gap-3">
+                  <Users className={cn("h-4 w-4 sm:h-[18px] sm:w-[18px] shrink-0", isMemberRoute ? "text-teal-700" : "text-slate-400")} />
                   <span>Member</span>
                 </div>
                 {isMemberExpanded ? (
-                  <ChevronDown className="h-3.5 w-3.5 text-teal-700 transition-transform duration-200" />
+                  <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal-700 transition-transform duration-200 shrink-0" />
                 ) : (
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-400 transition-transform duration-200" />
+                  <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400 transition-transform duration-200 shrink-0" />
                 )}
               </button>
 
               {/* Collapsible Submenu */}
               {isMemberExpanded && (
-                <div className="ml-4 pl-3 border-l border-slate-200 space-y-0.5 py-1">
+                <div className="ml-4 pl-3.5 border-l border-slate-200 space-y-0.5 sm:space-y-1 py-1">
                   {memberSubmenuItems.map((subItem) => {
                     if (user && subItem.permission && !isSuperAdmin && !hasPermission(subItem.permission)) {
                       return null;
@@ -302,14 +302,14 @@ export function AdminSidebar() {
                         href={subItem.href}
                         onClick={closeSidebar}
                         className={cn(
-                          "flex items-center justify-between px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-colors",
+                          "flex items-center justify-between px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-[14px] font-medium rounded-md transition-colors leading-snug",
                           isSubActive
                             ? "bg-teal-50 text-teal-800 font-semibold"
                             : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                         )}
                       >
                         <span className="truncate">{subItem.label}</span>
-                        {isSubActive && <div className="h-1.5 w-1.5 rounded-full bg-teal-700 shrink-0" />}
+                        {isSubActive && <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-teal-700 shrink-0" />}
                       </Link>
                     );
                   })}
@@ -325,27 +325,27 @@ export function AdminSidebar() {
                 type="button"
                 onClick={toggleBeneficiaryMenu}
                 className={cn(
-                  "w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md transition-colors text-left",
+                  "w-full flex items-center justify-between px-3 py-2 sm:py-2.5 text-xs sm:text-[15px] font-medium rounded-md transition-colors text-left leading-snug",
                   isBeneficiaryRoute
                     ? "bg-teal-50/70 text-teal-900 font-semibold"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 )}
                 aria-expanded={isBeneficiaryExpanded}
               >
-                <div className="flex items-center gap-2.5">
-                  <HeartHandshake className={cn("h-4 w-4", isBeneficiaryRoute ? "text-teal-700" : "text-slate-400")} />
+                <div className="flex items-center gap-3">
+                  <HeartHandshake className={cn("h-4 w-4 sm:h-[18px] sm:w-[18px] shrink-0", isBeneficiaryRoute ? "text-teal-700" : "text-slate-400")} />
                   <span>Beneficiary</span>
                 </div>
                 {isBeneficiaryExpanded ? (
-                  <ChevronDown className="h-3.5 w-3.5 text-teal-700 transition-transform duration-200" />
+                  <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal-700 transition-transform duration-200 shrink-0" />
                 ) : (
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-400 transition-transform duration-200" />
+                  <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400 transition-transform duration-200 shrink-0" />
                 )}
               </button>
 
               {/* Collapsible Submenu */}
               {isBeneficiaryExpanded && (
-                <div className="ml-4 pl-3 border-l border-slate-200 space-y-0.5 py-1">
+                <div className="ml-4 pl-3.5 border-l border-slate-200 space-y-0.5 sm:space-y-1 py-1">
                   {beneficiarySubmenuItems.map((subItem) => {
                     if (user && subItem.permission && !isSuperAdmin && !hasPermission(subItem.permission)) {
                       return null;
@@ -359,14 +359,14 @@ export function AdminSidebar() {
                         href={subItem.href}
                         onClick={closeSidebar}
                         className={cn(
-                          "flex items-center justify-between px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-colors",
+                          "flex items-center justify-between px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-[14px] font-medium rounded-md transition-colors leading-snug",
                           isSubActive
                             ? "bg-teal-50 text-teal-800 font-semibold"
                             : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                         )}
                       >
                         <span className="truncate">{subItem.label}</span>
-                        {isSubActive && <div className="h-1.5 w-1.5 rounded-full bg-teal-700 shrink-0" />}
+                        {isSubActive && <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-teal-700 shrink-0" />}
                       </Link>
                     );
                   })}
@@ -382,27 +382,27 @@ export function AdminSidebar() {
                 type="button"
                 onClick={toggleGroupMenu}
                 className={cn(
-                  "w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md transition-colors text-left",
+                  "w-full flex items-center justify-between px-3 py-2 sm:py-2.5 text-xs sm:text-[15px] font-medium rounded-md transition-colors text-left leading-snug",
                   isGroupRoute
                     ? "bg-teal-50/70 text-teal-900 font-semibold"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 )}
                 aria-expanded={isGroupExpanded}
               >
-                <div className="flex items-center gap-2.5">
-                  <Network className={cn("h-4 w-4", isGroupRoute ? "text-teal-700" : "text-slate-400")} />
+                <div className="flex items-center gap-3">
+                  <Network className={cn("h-4 w-4 sm:h-[18px] sm:w-[18px] shrink-0", isGroupRoute ? "text-teal-700" : "text-slate-400")} />
                   <span>Group</span>
                 </div>
                 {isGroupExpanded ? (
-                  <ChevronDown className="h-3.5 w-3.5 text-teal-700 transition-transform duration-200" />
+                  <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal-700 transition-transform duration-200 shrink-0" />
                 ) : (
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-400 transition-transform duration-200" />
+                  <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400 transition-transform duration-200 shrink-0" />
                 )}
               </button>
 
               {/* Collapsible Submenu */}
               {isGroupExpanded && (
-                <div className="ml-4 pl-3 border-l border-slate-200 space-y-0.5 py-1">
+                <div className="ml-4 pl-3.5 border-l border-slate-200 space-y-0.5 sm:space-y-1 py-1">
                   {groupSubmenuItems.map((subItem) => {
                     if (user && subItem.permission && !isSuperAdmin && !hasPermission(subItem.permission)) {
                       return null;
@@ -416,14 +416,14 @@ export function AdminSidebar() {
                         href={subItem.href}
                         onClick={closeSidebar}
                         className={cn(
-                          "flex items-center justify-between px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-colors",
+                          "flex items-center justify-between px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-[14px] font-medium rounded-md transition-colors leading-snug",
                           isSubActive
                             ? "bg-teal-50 text-teal-800 font-semibold"
                             : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                         )}
                       >
                         <span className="truncate">{subItem.label}</span>
-                        {isSubActive && <div className="h-1.5 w-1.5 rounded-full bg-teal-700 shrink-0" />}
+                        {isSubActive && <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-teal-700 shrink-0" />}
                       </Link>
                     );
                   })}
@@ -439,27 +439,27 @@ export function AdminSidebar() {
                 type="button"
                 onClick={toggleContributionMenu}
                 className={cn(
-                  "w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md transition-colors text-left",
+                  "w-full flex items-center justify-between px-3 py-2 sm:py-2.5 text-xs sm:text-[15px] font-medium rounded-md transition-colors text-left leading-snug",
                   isContributionRoute
                     ? "bg-teal-50/70 text-teal-900 font-semibold"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 )}
                 aria-expanded={isContributionExpanded}
               >
-                <div className="flex items-center gap-2.5">
-                  <PiggyBank className={cn("h-4 w-4", isContributionRoute ? "text-teal-700" : "text-slate-400")} />
+                <div className="flex items-center gap-3">
+                  <PiggyBank className={cn("h-4 w-4 sm:h-[18px] sm:w-[18px] shrink-0", isContributionRoute ? "text-teal-700" : "text-slate-400")} />
                   <span>Contribution</span>
                 </div>
                 {isContributionExpanded ? (
-                  <ChevronDown className="h-3.5 w-3.5 text-teal-700 transition-transform duration-200" />
+                  <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal-700 transition-transform duration-200 shrink-0" />
                 ) : (
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-400 transition-transform duration-200" />
+                  <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400 transition-transform duration-200 shrink-0" />
                 )}
               </button>
 
               {/* Collapsible Submenu */}
               {isContributionExpanded && (
-                <div className="ml-4 pl-3 border-l border-slate-200 space-y-0.5 py-1">
+                <div className="ml-4 pl-3.5 border-l border-slate-200 space-y-0.5 sm:space-y-1 py-1">
                   {contributionSubmenuItems.map((subItem) => {
                     if (user && subItem.permission && !isSuperAdmin && !hasPermission(subItem.permission)) {
                       return null;
@@ -473,14 +473,14 @@ export function AdminSidebar() {
                         href={subItem.href}
                         onClick={closeSidebar}
                         className={cn(
-                          "flex items-center justify-between px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-colors",
+                          "flex items-center justify-between px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-[14px] font-medium rounded-md transition-colors leading-snug",
                           isSubActive
                             ? "bg-teal-50 text-teal-800 font-semibold"
                             : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                         )}
                       >
                         <span className="truncate">{subItem.label}</span>
-                        {isSubActive && <div className="h-1.5 w-1.5 rounded-full bg-teal-700 shrink-0" />}
+                        {isSubActive && <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-teal-700 shrink-0" />}
                       </Link>
                     );
                   })}
@@ -496,27 +496,27 @@ export function AdminSidebar() {
                 type="button"
                 onClick={toggleQardHasanahMenu}
                 className={cn(
-                  "w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md transition-colors text-left",
+                  "w-full flex items-center justify-between px-3 py-2 sm:py-2.5 text-xs sm:text-[15px] font-medium rounded-md transition-colors text-left leading-snug",
                   isQardHasanahRoute
                     ? "bg-teal-50/70 text-teal-900 font-semibold"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 )}
                 aria-expanded={isQardHasanahExpanded}
               >
-                <div className="flex items-center gap-2.5">
-                  <Coins className={cn("h-4 w-4", isQardHasanahRoute ? "text-teal-700" : "text-slate-400")} />
+                <div className="flex items-center gap-3">
+                  <Coins className={cn("h-4 w-4 sm:h-[18px] sm:w-[18px] shrink-0", isQardHasanahRoute ? "text-teal-700" : "text-slate-400")} />
                   <span>Qard Hasanah</span>
                 </div>
                 {isQardHasanahExpanded ? (
-                  <ChevronDown className="h-3.5 w-3.5 text-teal-700 transition-transform duration-200" />
+                  <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal-700 transition-transform duration-200 shrink-0" />
                 ) : (
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-400 transition-transform duration-200" />
+                  <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400 transition-transform duration-200 shrink-0" />
                 )}
               </button>
 
               {/* Collapsible Submenu */}
               {isQardHasanahExpanded && (
-                <div className="ml-4 pl-3 border-l border-slate-200 space-y-0.5 py-1">
+                <div className="ml-4 pl-3.5 border-l border-slate-200 space-y-0.5 sm:space-y-1 py-1">
                   {qardHasanahSubmenuItems.map((subItem) => {
                     if (user && subItem.permission && !isSuperAdmin && !hasPermission(subItem.permission)) {
                       return null;
@@ -530,14 +530,14 @@ export function AdminSidebar() {
                         href={subItem.href}
                         onClick={closeSidebar}
                         className={cn(
-                          "flex items-center justify-between px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-colors",
+                          "flex items-center justify-between px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-[14px] font-medium rounded-md transition-colors leading-snug",
                           isSubActive
                             ? "bg-teal-50 text-teal-800 font-semibold"
                             : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                         )}
                       >
                         <span className="truncate">{subItem.label}</span>
-                        {isSubActive && <div className="h-1.5 w-1.5 rounded-full bg-teal-700 shrink-0" />}
+                        {isSubActive && <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-teal-700 shrink-0" />}
                       </Link>
                     );
                   })}
@@ -553,29 +553,29 @@ export function AdminSidebar() {
                 type="button"
                 onClick={toggleSadaqaMenu}
                 className={cn(
-                  "w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md transition-colors text-left",
+                  "w-full flex items-center justify-between px-3 py-2 sm:py-2.5 text-xs sm:text-[15px] font-medium rounded-md transition-colors text-left leading-snug",
                   isSadaqaRoute
                     ? "bg-teal-50/70 text-teal-900 font-semibold"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 )}
                 aria-expanded={isSadaqaExpanded}
               >
-                <div className="flex items-center gap-2.5">
-                  <HandHeart className={cn("h-4 w-4", isSadaqaRoute ? "text-teal-700" : "text-slate-400")} />
+                <div className="flex items-center gap-3">
+                  <HandHeart className={cn("h-4 w-4 sm:h-[18px] sm:w-[18px] shrink-0", isSadaqaRoute ? "text-teal-700" : "text-slate-400")} />
                   <span>Sadaqa / Donations</span>
                 </div>
                 {isSadaqaExpanded ? (
-                  <ChevronDown className="h-3.5 w-3.5 text-teal-700 transition-transform duration-200" />
+                  <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal-700 transition-transform duration-200 shrink-0" />
                 ) : (
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-400 transition-transform duration-200" />
+                  <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400 transition-transform duration-200 shrink-0" />
                 )}
               </button>
 
               {/* Collapsible Submenu */}
               {isSadaqaExpanded && (
-                <div className="ml-4 pl-3 border-l border-slate-200 space-y-0.5 py-1">
+                <div className="ml-4 pl-3.5 border-l border-slate-200 space-y-0.5 sm:space-y-1 py-1">
                   {sadaqaSubmenuItems.map((subItem) => {
-                    if (user && subItem.permission && !isSuperAdmin && !hasPermission(subItem.permission) && !hasPermission('donations.view')) {
+                    if (user && subItem.permission && !isSuperAdmin && !hasPermission(subItem.permission)) {
                       return null;
                     }
                     const isSubActive = subItem.exact
@@ -587,14 +587,14 @@ export function AdminSidebar() {
                         href={subItem.href}
                         onClick={closeSidebar}
                         className={cn(
-                          "flex items-center justify-between px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-colors",
+                          "flex items-center justify-between px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-[14px] font-medium rounded-md transition-colors leading-snug",
                           isSubActive
                             ? "bg-teal-50 text-teal-800 font-semibold"
                             : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                         )}
                       >
                         <span className="truncate">{subItem.label}</span>
-                        {isSubActive && <div className="h-1.5 w-1.5 rounded-full bg-teal-700 shrink-0" />}
+                        {isSubActive && <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-teal-700 shrink-0" />}
                       </Link>
                     );
                   })}
@@ -616,44 +616,44 @@ export function AdminSidebar() {
                 href={item.href}
                 onClick={closeSidebar}
                 className={cn(
-                  "flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md transition-colors",
+                  "flex items-center justify-between px-3 py-2 sm:py-2.5 text-xs sm:text-[15px] font-medium rounded-md transition-colors leading-snug",
                   isActive
                     ? "bg-teal-50 text-teal-800 font-semibold"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 )}
               >
-                <div className="flex items-center gap-2.5">
-                  <Icon className={cn("h-4 w-4", isActive ? "text-teal-700" : "text-slate-400")} />
+                <div className="flex items-center gap-3">
+                  <Icon className={cn("h-4 w-4 sm:h-[18px] sm:w-[18px] shrink-0", isActive ? "text-teal-700" : "text-slate-400")} />
                   <span>{item.label}</span>
                 </div>
-                {isActive && <ChevronRight className="h-3 w-3 text-teal-700" />}
+                {isActive && <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal-700 shrink-0" />}
               </Link>
             );
           })}
         </nav>
 
         {/* User Info & Footer */}
-        <div className="p-3 border-t border-slate-200 space-y-1 shrink-0">
+        <div className="p-3 border-t border-slate-200 space-y-1.5 shrink-0">
           {user && (
-            <div className="px-3 py-2 bg-slate-50 rounded-md border border-slate-100 mb-2">
-              <div className="text-xs font-semibold text-slate-900 truncate">{user.full_name}</div>
-              <div className="text-[10px] text-teal-700 capitalize font-medium">{user.role?.replace('_', ' ')}</div>
+            <div className="px-3 py-2.5 bg-slate-50 rounded-md border border-slate-100 mb-2">
+              <div className="text-xs sm:text-[13.5px] font-semibold text-slate-900 truncate">{user.full_name}</div>
+              <div className="text-[10px] sm:text-xs text-teal-700 capitalize font-medium">{user.role?.replace('_', ' ')}</div>
             </div>
           )}
           <Link
             href="/"
             target="_blank"
             onClick={closeSidebar}
-            className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-md transition-colors"
+            className="flex items-center gap-3 px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-md transition-colors"
           >
-            <Globe className="h-4 w-4 text-slate-400" />
+            <Globe className="h-4 w-4 sm:h-[18px] sm:w-[18px] text-slate-400 shrink-0" />
             <span>Public Website</span>
           </Link>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
           >
-            <LogOut className="h-4 w-4 text-rose-500" />
+            <LogOut className="h-4 w-4 sm:h-[18px] sm:w-[18px] text-rose-500 shrink-0" />
             <span>Sign Out</span>
           </button>
         </div>

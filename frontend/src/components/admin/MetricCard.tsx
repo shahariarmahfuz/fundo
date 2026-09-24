@@ -25,16 +25,16 @@ export function MetricCard({
     <Card className={cn("hover:border-slate-300 transition-colors w-full min-w-0", className)}>
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-xs font-medium text-slate-500 truncate">{title}</span>
-          <div className="h-8 w-8 rounded-md bg-teal-50 flex items-center justify-center text-teal-700 shrink-0">
-            <Icon className="h-4 w-4" />
+          <span className="text-xs sm:text-[14px] font-medium text-slate-500 truncate">{title}</span>
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-md bg-teal-50 flex items-center justify-center text-teal-700 shrink-0">
+            <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         </div>
         <div className="mt-2 sm:mt-2.5">
-          <span className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 truncate block">{value}</span>
+          <span className="text-lg sm:text-2xl font-bold tracking-tight text-slate-900 truncate block">{value}</span>
         </div>
         {(subtitle || change) && (
-          <div className="mt-1.5 flex flex-wrap items-center gap-1 text-[11px] sm:text-xs">
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] sm:text-[13px]">
             {change && (
               <span
                 className={cn(

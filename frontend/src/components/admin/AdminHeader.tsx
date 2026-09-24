@@ -90,8 +90,8 @@ export function AdminHeader({ title, subtitle, userRole = 'Super Admin' }: Admin
     .join('') || 'A';
 
   return (
-    <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-3 sm:px-6 lg:px-8 shrink-0 w-full min-w-0">
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+    <header className="h-16 lg:h-20 border-b border-slate-200 bg-white flex items-center justify-between px-3 sm:px-6 lg:px-8 shrink-0 w-full min-w-0">
+      <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
         {/* Mobile Menu Button */}
         <button
           type="button"
@@ -111,11 +111,11 @@ export function AdminHeader({ title, subtitle, userRole = 'Super Admin' }: Admin
 
         {/* Title and Subtitle */}
         <div className="min-w-0">
-          <h1 className="text-xs sm:text-base font-semibold text-slate-900 tracking-tight truncate">
+          <h1 className="text-sm sm:text-lg md:text-xl lg:text-[26px] font-bold text-slate-900 tracking-tight leading-tight truncate">
             {title}
           </h1>
           {subtitle && (
-            <p className="text-[11px] sm:text-xs text-slate-500 hidden md:block truncate">
+            <p className="text-[11px] sm:text-xs md:text-sm lg:text-[14.5px] text-slate-500 hidden sm:block truncate mt-0.5">
               {subtitle}
             </p>
           )}
@@ -124,8 +124,8 @@ export function AdminHeader({ title, subtitle, userRole = 'Super Admin' }: Admin
 
       {/* Header Actions / User Status */}
       <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-        <Badge variant="info" className="gap-1 font-normal text-[10px] sm:text-xs py-0.5 px-2">
-          <ShieldCheck className="h-3 w-3 text-teal-700 shrink-0" />
+        <Badge variant="info" className="gap-1.5 font-normal text-[10px] sm:text-xs py-1 px-2.5">
+          <ShieldCheck className="h-3.5 w-3.5 text-teal-700 shrink-0" />
           <span>{roleName}</span>
         </Badge>
 
@@ -136,7 +136,7 @@ export function AdminHeader({ title, subtitle, userRole = 'Super Admin' }: Admin
           <button
             type="button"
             onClick={() => setIsOpen((prev) => !prev)}
-            className="flex items-center gap-2 p-1 sm:px-2 sm:py-1 rounded-lg hover:bg-slate-100 transition-colors outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-1 text-left"
+            className="flex items-center gap-2.5 p-1 sm:px-2.5 sm:py-1.5 rounded-lg hover:bg-slate-100 transition-colors outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-1 text-left"
             style={{ WebkitTapHighlightColor: 'transparent' }}
             aria-expanded={isOpen}
             aria-haspopup="true"
@@ -148,27 +148,27 @@ export function AdminHeader({ title, subtitle, userRole = 'Super Admin' }: Admin
                 <img
                   src={user.avatar_url}
                   alt={displayName}
-                  className="h-7 w-7 rounded-full object-cover border border-teal-600 shadow-2xs"
+                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full object-cover border border-teal-600 shadow-2xs"
                 />
-                <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-white" />
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-1 ring-white" />
               </div>
             ) : (
-              <div className="h-7 w-7 rounded-full bg-teal-50 text-teal-700 border border-teal-200 flex items-center justify-center text-xs font-bold shrink-0 relative">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-teal-50 text-teal-700 border border-teal-200 flex items-center justify-center text-xs sm:text-sm font-bold shrink-0 relative">
                 {initials}
-                <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-white" />
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-1 ring-white" />
               </div>
             )}
             <div className="text-left hidden md:block">
-              <div className="text-xs font-medium text-slate-800 leading-tight max-w-[130px] truncate">
+              <div className="text-xs sm:text-[13.5px] font-semibold text-slate-800 leading-tight max-w-[150px] truncate">
                 {displayName}
               </div>
-              <div className="text-[10px] text-slate-400 max-w-[130px] truncate">
+              <div className="text-[10px] sm:text-[12px] text-slate-400 max-w-[150px] truncate">
                 {displayEmail}
               </div>
             </div>
             <ChevronDown
               className={cn(
-                'h-3.5 w-3.5 text-slate-400 transition-transform duration-200 hidden md:block',
+                'h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400 transition-transform duration-200 hidden md:block',
                 isOpen && 'rotate-180'
               )}
             />

@@ -34,7 +34,13 @@ export default function LoginPage() {
         throw new Error('Authentication succeeded but no access token was returned');
       }
     } catch (err: any) {
-      setError(err.message || 'Invalid email or password');
+      if (err.status === 401 || err.message?.toLowerCase().includes('credential') || err.message?.toLowerCase().includes('invalid')) {
+        setError('Invalid email or password.');
+      } else if (err.status >= 500 || err.message?.toLowerCase().includes('unavailable') || err.message?.toLowerCase().includes('connect') || err.message?.includes('500')) {
+        setError('Unable to reach the authentication server. Please try again shortly.');
+      } else {
+        setError(err.message || 'Invalid email or password.');
+      }
     } finally {
       setLoading(false);
     }

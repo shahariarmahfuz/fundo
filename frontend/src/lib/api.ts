@@ -119,8 +119,29 @@ export class ApiClient {
       }
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: response.statusText }));
-        const err = new Error(errorData.detail || `Request failed with status ${response.status}`);
+        let errorMessage = '';
+        try {
+          const errorData = await response.json();
+          if (errorData && typeof errorData === 'object') {
+            errorMessage = errorData.detail || errorData.message || '';
+          }
+        } catch {
+          // Response body was not JSON (e.g. proxy 500 HTML or connection error)
+        }
+
+        if (!errorMessage) {
+          if (response.status === 401) {
+            errorMessage = 'Invalid email or password.';
+          } else if (response.status === 403) {
+            errorMessage = 'Access denied. You do not have permission for this resource.';
+          } else if (response.status >= 500) {
+            errorMessage = 'The service is temporarily unavailable. Please try again shortly.';
+          } else {
+            errorMessage = `Request failed with status ${response.status}`;
+          }
+        }
+
+        const err = new Error(errorMessage);
         (err as any).status = response.status;
         throw err;
       }

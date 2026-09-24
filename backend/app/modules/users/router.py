@@ -98,6 +98,8 @@ async def build_user_response(user: User, db: AsyncSession) -> UserResponse:
         full_name=user.full_name,
         role=user.role,
         phone=user.phone,
+        avatar_url=user.avatar_url,
+        avatar_public_id=user.avatar_public_id,
         is_active=user.is_active,
         roles=roles,
         permissions=perms,

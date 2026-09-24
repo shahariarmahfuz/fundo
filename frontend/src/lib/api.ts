@@ -164,4 +164,53 @@ export class ApiClient {
   static delete<T>(endpoint: string, options?: RequestInit): Promise<T> {
     return this.fetch<T>(endpoint, { ...options, method: 'DELETE' });
   }
+
+  static async upload<T>(
+    endpoint: string,
+    formData: FormData,
+    options?: RequestInit
+  ): Promise<T> {
+    const url = endpoint.startsWith('http') ? endpoint : `${BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+    const token = this.getToken();
+
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      ...((options?.headers as Record<string, string>) || {}),
+    };
+
+    if (token && !headers['Authorization']) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    try {
+      const response = await fetch(url, {
+        credentials: 'include',
+        ...options,
+        method: options?.method || 'POST',
+        headers,
+        body: formData,
+      });
+
+      if (response.status === 401) {
+        this.setToken(null);
+        this.setUser(null);
+        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+          window.location.href = '/login';
+        }
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: response.statusText }));
+        const err = new Error(errorData.detail || `Upload failed with status ${response.status}`);
+        (err as any).status = response.status;
+        throw err;
+      }
+
+      return (await response.json()) as T;
+    } catch (err: any) {
+      console.error(`API Upload Error on [POST ${url}]:`, err.message);
+      throw err;
+    }
+  }
 }
+

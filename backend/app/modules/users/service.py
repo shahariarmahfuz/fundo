@@ -149,6 +149,10 @@ class UserService:
             user.is_active = user_in.is_active
         if user_in.password:
             user.hashed_password = hash_password(user_in.password)
+        if user_in.avatar_url is not None:
+            user.avatar_url = user_in.avatar_url.strip() if user_in.avatar_url else None
+        if user_in.avatar_public_id is not None:
+            user.avatar_public_id = user_in.avatar_public_id.strip() if user_in.avatar_public_id else None
 
         if user_in.role_ids is not None:
             await self.db.execute(
@@ -268,6 +272,10 @@ class UserService:
             user.full_name = profile_in.full_name.strip()
         if profile_in.phone is not None:
             user.phone = profile_in.phone.strip() if profile_in.phone else None
+        if profile_in.avatar_url is not None:
+            user.avatar_url = profile_in.avatar_url.strip() if profile_in.avatar_url else None
+        if profile_in.avatar_public_id is not None:
+            user.avatar_public_id = profile_in.avatar_public_id.strip() if profile_in.avatar_public_id else None
 
         await self.db.commit()
         await self.db.refresh(user)

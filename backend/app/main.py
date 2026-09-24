@@ -27,6 +27,7 @@ from app.modules.member_applications.router import (
     admin_router as member_applications_router,
     public_router as public_member_applications_router
 )
+from app.modules.media.router import router as media_router
 
 setup_logging()
 logger = logging.getLogger("fundo.main")
@@ -128,3 +129,4 @@ app.include_router(reports_router, prefix=v1_prefix)
 app.include_router(settings_router, prefix=v1_prefix)
 app.include_router(public_member_applications_router, prefix=v1_prefix)
 app.include_router(member_applications_router, prefix=v1_prefix)
+app.include_router(media_router, prefix=v1_prefix)

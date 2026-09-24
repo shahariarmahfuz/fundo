@@ -29,6 +29,8 @@ export interface User {
   full_name: string;
   role: string;
   phone?: string | null;
+  avatar_url?: string | null;
+  avatar_public_id?: string | null;
   is_active: boolean;
   roles?: string[];
   permissions?: string[];
@@ -37,11 +39,36 @@ export interface User {
   updated_at: string;
 }
 
+export interface MediaAsset {
+  id: string;
+  provider: string;
+  public_id: string;
+  secure_url: string;
+  resource_type: string;
+  format?: string | null;
+  bytes_size?: number | null;
+  width?: number | null;
+  height?: number | null;
+  purpose: string;
+  folder: string;
+  original_filename?: string | null;
+  created_at: string;
+}
+
+export interface MediaUploadResponse {
+  success: boolean;
+  message: string;
+  asset: MediaAsset;
+  url: string;
+  public_id: string;
+}
+
 export interface TokenResponse {
   access_token: string;
   token_type: string;
   user: User;
 }
+
 
 export interface ApiError {
   detail: string;

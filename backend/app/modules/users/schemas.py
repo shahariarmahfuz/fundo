@@ -63,6 +63,8 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
     password: Optional[str] = Field(None, min_length=6)
     role_ids: Optional[List[uuid.UUID]] = None
+    avatar_url: Optional[str] = None
+    avatar_public_id: Optional[str] = None
 
 
 class UserResponse(BaseModel):
@@ -71,6 +73,8 @@ class UserResponse(BaseModel):
     full_name: str
     role: str
     phone: Optional[str] = None
+    avatar_url: Optional[str] = None
+    avatar_public_id: Optional[str] = None
     is_active: bool
     roles: List[str] = []
     permissions: List[str] = []
@@ -96,6 +100,8 @@ class TokenResponse(BaseModel):
 class ProfileUpdate(BaseModel):
     full_name: Optional[str] = Field(None, min_length=1, max_length=255)
     phone: Optional[str] = Field(None, max_length=50)
+    avatar_url: Optional[str] = None
+    avatar_public_id: Optional[str] = None
 
 
 class ChangePasswordRequest(BaseModel):

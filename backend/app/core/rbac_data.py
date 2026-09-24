@@ -80,6 +80,10 @@ SYSTEM_PERMISSIONS: List[Dict[str, str]] = [
     {"code": "roles.edit", "module": "roles", "action": "edit", "description": "Update role permissions and assignments"},
     {"code": "roles.delete", "module": "roles", "action": "delete", "description": "Delete custom roles"},
 
+    # Media
+    {"code": "media.upload", "module": "media", "action": "upload", "description": "Upload media assets and files to the platform"},
+    {"code": "media.delete", "module": "media", "action": "delete", "description": "Remove and purge media assets"},
+
     # Settings
     {"code": "settings.view", "module": "settings", "action": "view", "description": "View system configuration parameters"},
     {"code": "settings.edit", "module": "settings", "action": "edit", "description": "Modify global platform settings"},

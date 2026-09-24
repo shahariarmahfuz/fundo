@@ -142,10 +142,22 @@ export function AdminHeader({ title, subtitle, userRole = 'Super Admin' }: Admin
             aria-haspopup="true"
             aria-label="User account menu"
           >
-            <div className="h-7 w-7 rounded-full bg-teal-50 text-teal-700 border border-teal-200 flex items-center justify-center text-xs font-bold shrink-0 relative">
-              {initials}
-              <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-white" />
-            </div>
+            {user?.avatar_url ? (
+              <div className="relative shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={user.avatar_url}
+                  alt={displayName}
+                  className="h-7 w-7 rounded-full object-cover border border-teal-600 shadow-2xs"
+                />
+                <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-white" />
+              </div>
+            ) : (
+              <div className="h-7 w-7 rounded-full bg-teal-50 text-teal-700 border border-teal-200 flex items-center justify-center text-xs font-bold shrink-0 relative">
+                {initials}
+                <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-white" />
+              </div>
+            )}
             <div className="text-left hidden md:block">
               <div className="text-xs font-medium text-slate-800 leading-tight max-w-[130px] truncate">
                 {displayName}
@@ -171,9 +183,18 @@ export function AdminHeader({ title, subtitle, userRole = 'Super Admin' }: Admin
               {/* User Info Header */}
               <div className="px-3 py-2.5 bg-slate-50/80 rounded-lg border border-slate-100 mb-1.5">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-9 w-9 rounded-full bg-teal-700 text-white flex items-center justify-center font-bold text-sm shrink-0">
-                    {initials}
-                  </div>
+                  {user?.avatar_url ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={user.avatar_url}
+                      alt={displayName}
+                      className="h-9 w-9 rounded-full object-cover border border-teal-600 shrink-0"
+                    />
+                  ) : (
+                    <div className="h-9 w-9 rounded-full bg-teal-700 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                      {initials}
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-semibold text-slate-900 truncate">
                       {displayName}

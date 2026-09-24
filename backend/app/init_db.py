@@ -21,6 +21,7 @@ from app.modules.contributions.models import Contribution
 from app.modules.loans.models import Loan, LoanRepayment
 from app.modules.qard_hasanah.models import QardHasanahLoan, QardHasanahRepayment
 from app.modules.sadaqa.models import SadaqaDonation
+from app.modules.media.models import MediaAsset
 from app.modules.settings.models import SystemSetting
 from app.seed import seed_database
 

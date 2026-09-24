@@ -20,6 +20,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { AdminHeader } from '@/components/admin/AdminHeader';
+import { MediaUploader } from '@/components/media/MediaUploader';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -196,9 +197,18 @@ export function ProfileClient({ defaultTab = 'overview' }: ProfileClientProps) {
         {/* Profile Header Summary Card */}
         <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-teal-700 text-white flex items-center justify-center font-bold text-2xl shadow-sm shrink-0">
-              {initials}
-            </div>
+            {user?.avatar_url ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={user.avatar_url}
+                alt={displayName}
+                className="h-16 w-16 rounded-full object-cover border-2 border-teal-600 shadow-sm shrink-0"
+              />
+            ) : (
+              <div className="h-16 w-16 rounded-full bg-teal-700 text-white flex items-center justify-center font-bold text-2xl shadow-sm shrink-0">
+                {initials}
+              </div>
+            )}
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-xl font-bold text-slate-900">{displayName}</h2>
@@ -461,7 +471,46 @@ export function ProfileClient({ defaultTab = 'overview' }: ProfileClientProps) {
                   </div>
                 )}
 
-                <form onSubmit={handleSaveProfile} className="space-y-4">
+                <form onSubmit={handleSaveProfile} className="space-y-5">
+                  {/* Reusable Universal Profile Photo Uploader */}
+                  <div className="pb-4 border-b border-slate-100">
+                    <MediaUploader
+                      type="image"
+                      purpose="profile"
+                      value={user?.avatar_url}
+                      label="User Profile Picture"
+                      helperText="Upload a profile picture for your Foundation account. Formats: JPG, PNG, WebP (Max 5MB)."
+                      aspectRatio="square"
+                      maxSizeMB={5}
+                      onUpload={(result) => {
+                        if (result.user) {
+                          setUser(result.user);
+                        } else if (user) {
+                          setUser({
+                            ...user,
+                            avatar_url: result.url,
+                            avatar_public_id: result.public_id,
+                          });
+                        }
+                        setProfileSuccess('Profile picture updated successfully.');
+                        setProfileError(null);
+                      }}
+                      onRemove={async () => {
+                        try {
+                          setProfileSaving(true);
+                          const updatedUser = await ApiClient.delete<User>('/media/profile/avatar');
+                          setUser(updatedUser);
+                          setProfileSuccess('Profile picture removed successfully.');
+                          setProfileError(null);
+                        } catch (err: any) {
+                          setProfileError(err.message || 'Failed to remove profile picture.');
+                        } finally {
+                          setProfileSaving(false);
+                        }
+                      }}
+                    />
+                  </div>
+
                   {/* Editable: Full Name */}
                   <div>
                     <label className="block text-xs font-medium text-slate-700 mb-1">

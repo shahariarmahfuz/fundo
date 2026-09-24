@@ -127,6 +127,8 @@ class User(Base, TimestampMixin):
     role: Mapped[str] = mapped_column(String(50), default="staff", nullable=False, index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    avatar_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    avatar_public_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     roles: Mapped[List[Role]] = relationship(
         "Role",
